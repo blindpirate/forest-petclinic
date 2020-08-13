@@ -28,6 +28,7 @@ import org.hamcrest.core.StringContains
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE.JAVA_11
 import org.junit.jupiter.api.extension.ExtendWith
@@ -52,6 +53,7 @@ class WebSocketTestApp {
     suspend fun onError(socket: ServerWebSocket, message: Buffer) = webSocketWriteBackDirectly(socket, RoutingType.ON_WEB_SOCKET_ERROR, message)
 
     private suspend fun webSocketWriteBackDirectly(socket: ServerWebSocket, eventType: RoutingType, message: Buffer) {
+        println("${System.nanoTime()} $eventType : $message")
         // delay so that client can set up message handler
         delay(1000)
 
@@ -66,6 +68,8 @@ class WebSocketTestApp {
         if (eventType != RoutingType.ON_WEB_SOCKET_CLOSE) {
             socket.writeTextMessageAwait(messageText)
         }
+
+        println("${System.nanoTime()} $this $messages ${messages.size}")
     }
 }
 
@@ -92,18 +96,24 @@ class WebSocketChatRoomRouter @Inject constructor(vertx: Vertx) {
 
     @OnWSOpen
     suspend fun onOpen(socket: ServerWebSocket, @PathParam("username") username: String) {
+        println("${System.nanoTime()} user $username onOpen")
+        Assertions.assertNotNull(socket)
         sessions[username] = socket
         broadcast("User $username joined")
     }
 
     @OnWSClose
     suspend fun onClose(socket: ServerWebSocket, @PathParam("username") username: String) {
+        println("${System.nanoTime()} user $username onClose")
+        Assertions.assertNotNull(socket)
         sessions.remove(username)
         broadcast("User $username left")
     }
 
     @OnWSError
     suspend fun onError(socket: ServerWebSocket, @PathParam("username") username: String, throwable: Throwable) {
+        println("${System.nanoTime()} user $username onError $throwable")
+        Assertions.assertNotNull(socket)
         sessions.remove(username)
         broadcast("User $username left on error")
         errors.add(throwable)
@@ -111,11 +121,21 @@ class WebSocketChatRoomRouter @Inject constructor(vertx: Vertx) {
 
     @OnWSMessage
     suspend fun onMessage(message: String, @PathParam("username") username: String) {
+        println("${System.nanoTime()} user $username onMessage $message")
         broadcast(">> $username: $message")
     }
 
     private suspend fun broadcast(message: String) {
-        sessions.values.forEach { it.writeTextMessageAwait(message) }
+        // Delay so the client can set up message handler
+        delay(1000)
+        sessions.values.forEach {
+            try {
+                println("${System.nanoTime()} Send ${message} to $it")
+                it.writeTextMessageAwait(message)
+            } catch (e: Throwable) {
+                e.printStackTrace()
+            }
+        }
     }
 }
 
@@ -123,6 +143,7 @@ class WebSocketChatRoomRouter @Inject constructor(vertx: Vertx) {
 @ForestTest(appClass = WebSocketTestApp::class)
 @DisableAutoScan
 @IncludeComponents(classes = [WebSocketChatRoomRouter::class])
+@Timeout(120)
 class WebSocketIntegrationTest : AbstractForestIntegrationTest() {
     @Inject
     lateinit var app: WebSocketTestApp
@@ -151,9 +172,10 @@ class WebSocketIntegrationTest : AbstractForestIntegrationTest() {
             .close()
 
         // Wait for server receiving the close event
-        delay(1000)
+        delay(5000)
 
         val expectedServerMessages = expectedClientMessages + listOf("close")
+        println("Check: ${System.nanoTime()} $app ${app.messages} ${app.messages.size}")
         assertEquals(expectedServerMessages, app.messages)
     }
 
@@ -161,23 +183,25 @@ class WebSocketIntegrationTest : AbstractForestIntegrationTest() {
     fun `websocket chat room test`() = runBlockingUnit {
         val alice = openWebsocket("/chat/Alice")
 
-        alice.waitFor("User Alice joined")
+        println("${System.nanoTime()} check alice")
+        alice.waitFor("User Alice joined", timeoutMillis = 10000)
 
         val bob = openWebsocket("/chat/Bob")
 
-        listOf(alice, bob).forEach { it.waitFor("User Bob joined", timeoutMillis = 5000) }
+        println("${System.nanoTime()} check bob")
+        listOf(alice, bob).forEach { it.waitFor("User Bob joined", timeoutMillis = 10000) }
 
         alice.sendMessage("Hi I'm Alice")
-        listOf(alice, bob).forEach { it.waitFor(">> Alice: Hi I'm Alice", timeoutMillis = 5000) }
+        listOf(alice, bob).forEach { it.waitFor(">> Alice: Hi I'm Alice", timeoutMillis = 10000) }
 
         val charlie = openWebsocket("/chat/Charlie")
-        listOf(alice, bob, charlie).forEach { it.waitFor("User Charlie joined", timeoutMillis = 5000) }
+        listOf(alice, bob, charlie).forEach { it.waitFor("User Charlie joined", timeoutMillis = 10000) }
         charlie.sendMessage("Hello from Charlie")
-        listOf(alice, bob, charlie).forEach { it.waitFor(">> Charlie: Hello from Charlie", timeoutMillis = 5000) }
+        listOf(alice, bob, charlie).forEach { it.waitFor(">> Charlie: Hello from Charlie", timeoutMillis = 10000) }
 
         bob.close()
 
-        listOf(alice, charlie).forEach { it.waitFor("User Bob left", timeoutMillis = 5000) }
+        listOf(alice, charlie).forEach { it.waitFor("User Bob left", timeoutMillis = 10000) }
     }
 
     @Test
@@ -191,7 +215,7 @@ class WebSocketIntegrationTest : AbstractForestIntegrationTest() {
             .command(System.getProperty("java.home") + "/bin/java", "-Dserver.port=${port}", "-Duser.name=Bob", wsClientJavaFile.absolutePath)
             .start()
 
-        alice.waitFor("User Bob joined", ">> Bob: Hello from Bob", timeoutMillis = 2000)
+        alice.waitFor("User Bob joined", ">> Bob: Hello from Bob", timeoutMillis = 10000)
 
         process.destroy()
 
