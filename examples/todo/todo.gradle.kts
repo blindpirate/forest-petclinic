@@ -18,6 +18,7 @@ tasks.withType<KotlinCompile>() {
 dependencies {
     val junitVersion = "5.6.2"
     val junitRedisExtension = "2.0.0"
+    val embeddedRedisVersion = "0.7.3"
     val h2Version = "1.4.200"
     val groovyVersion = "2.5.12"
     val jedisVersion = "3.2.0"
@@ -30,6 +31,7 @@ dependencies {
     testImplementation(project(":junit5-extension"))
     testImplementation("io.vertx:vertx-web-client:4.0.0.Beta1")
     testImplementation("se.svt.oss.junit5:junit5-redis-extension:$junitRedisExtension")
+    testImplementation("it.ozimov:embedded-redis:$embeddedRedisVersion")
     testImplementation("org.codehaus.groovy:groovy-all:$groovyVersion")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:$junitVersion")
 
