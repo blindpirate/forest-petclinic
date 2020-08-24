@@ -1,6 +1,7 @@
 package io.forestframework.core.http
 
 import io.forestframework.core.ForestApplication
+import io.forestframework.core.config.Config
 import io.forestframework.core.http.param.PathParam
 import io.forestframework.core.http.websocket.OnWSClose
 import io.forestframework.core.http.websocket.OnWSError
@@ -19,9 +20,6 @@ import io.vertx.core.http.ServerWebSocket
 import io.vertx.kotlin.core.http.writePingAwait
 import io.vertx.kotlin.core.http.writeTextMessageAwait
 import io.vertx.kotlin.coroutines.dispatcher
-import java.nio.file.Paths
-import java.util.concurrent.ConcurrentHashMap
-import javax.inject.Inject
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -35,6 +33,9 @@ import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.condition.EnabledOnJre
 import org.junit.jupiter.api.condition.JRE.JAVA_11
 import org.junit.jupiter.api.extension.ExtendWith
+import java.nio.file.Paths
+import java.util.concurrent.ConcurrentHashMap
+import javax.inject.Inject
 
 @ForestApplication
 class WebSocketTestApp {
@@ -116,6 +117,22 @@ class WebSocketChatRoomRouter @Inject constructor(vertx: Vertx) {
                 e.printStackTrace()
             }
         }
+    }
+}
+
+
+@ExtendWith
+@ForestTest
+@DisableAutoScan
+class MyTest {
+    @Inject
+    @Config("forest.http.port")
+    lateinit var port: Integer
+    @Test
+    public void myAwesomeTest() {
+        HttpClient xxx = new HttpClient()
+        xxx.request("http://localhost")
+        assert(response.statusCode==200)
     }
 }
 

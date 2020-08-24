@@ -110,6 +110,7 @@ public class Application implements AutoCloseable {
     @Override
     public void close() throws Exception {
         for (Extension extension : startupContext.getExtensions()) {
+            LOGGER.debug("Invoke extension close hook: {}", extension.getClass());
             extension.close();
         }
     }

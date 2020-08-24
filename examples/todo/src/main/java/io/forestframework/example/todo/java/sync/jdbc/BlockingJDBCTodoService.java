@@ -48,14 +48,13 @@ public class BlockingJDBCTodoService implements TodoService {
     @Inject
     public BlockingJDBCTodoService(ConfigProvider configProvider) {
         this.databaseUrl = configProvider.getInstance("forest.jdbc.url", String.class);
-        this.databaseUsername = configProvider.getInstance("forest.jdbc.root", String.class);
-        this.databasePassword = configProvider.getInstance("forest.jdbc.root", String.class);
-
+        this.databaseUsername = configProvider.getInstance("forest.jdbc.user", String.class);
+        this.databasePassword = configProvider.getInstance("forest.jdbc.password", String.class);
     }
 
     private Connection getConnection() {
         try {
-            return DriverManager.getConnection(databaseUrl, databaseUsername, databaseUrl);
+            return DriverManager.getConnection(databaseUrl, databaseUsername, databasePassword);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

@@ -16,13 +16,15 @@ include(":examples:todo")
 include(":examples:petclinic")
 include(":examples:benchmark-kotlin")
 include(":examples:initializr")
+include(":examples:todo-polyglot-java-server:node")
+include(":examples:todo-polyglot-java-server:java")
+include(":examples:todo-polyglot-js-server:node")
+include(":examples:todo-polyglot-js-server:java")
 
-rootProject.children.forEach {
-    it.buildFileName = "${it.name}.gradle.kts"
+rootProject.children.forEach { it.configureBuildScriptName() }
+
+fun ProjectDescriptor.configureBuildScriptName() {
+    buildFileName = "${name}.gradle.kts"
+    children.forEach { it.configureBuildScriptName() }
 }
 
-listOf(":extensions", ":examples").forEach { p ->
-    project(p).children.forEach {
-        it.buildFileName = "${it.name}.gradle.kts"
-    }
-}

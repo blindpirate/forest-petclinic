@@ -20,6 +20,9 @@ public interface Extension extends AutoCloseable {
     default void afterInjector(Injector injector) {
     }
 
+    /**
+     * The close hook.
+     */
     @Override
     default void close() throws Exception {
     }

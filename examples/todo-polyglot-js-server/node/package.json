@@ -1,0 +1,19 @@
+{
+  "name": "todo",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vertx/core": "^3.9.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "nedb": "^1.8.0",
+    "uuid": "^3.4.0"
+  }
+}

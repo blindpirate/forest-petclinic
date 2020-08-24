@@ -41,6 +41,8 @@ public class JsonResultProcessor implements RoutingResultProcessor {
             return response.write((Buffer) returnValue);
         } else if (returnValue == null && anno.respond404IfNull()) {
             return response.setStatusCode(HttpStatusCode.NOT_FOUND.getCode()).write(NOT_FOUND_JSON);
+        } else if (returnValue instanceof String) {
+            return response.write((String) returnValue);
         } else {
             return response.write(jsonify(anno, returnValue));
         }

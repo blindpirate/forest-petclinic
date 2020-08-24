@@ -2,6 +2,8 @@ package io.forestframework.ext.core
 
 import io.forestframework.core.ForestApplication
 import io.forestframework.core.http.result.GetPlainText
+import io.forestframework.core.http.routing.RoutingManager
+import io.forestframework.core.http.routing.RoutingType
 import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testsupport.ForestExtension
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
+import javax.inject.Inject
 
 @EnableStaticResource
 @ForestApplication
@@ -112,13 +115,17 @@ class StaticResourceExtensionMultipleWebrootsIntegrationTest : AbstractForestInt
 @ExtendWith(ForestExtension::class)
 @ForestTest(appClass = RouterWithPredefinedRoot::class)
 class StaticResourceExtensionTestApplicationWithPredefinedRoot : AbstractForestIntegrationTest() {
+    @Inject
+    lateinit var routingManager: RoutingManager
+
     @Test
     fun `index_html is not re-registered for root`() = runBlockingUnit {
         assertEquals("HelloWorld", get("/").bodyAsString())
+        assertEquals(1, routingManager.getRouting(RoutingType.HANDLER).count { it.path == "/" })
     }
 }
 
-@EnableStaticResource
+@WithStaticResource(webroot = "forest.static.webroot=StaticResourceTestData")
 @ForestApplication
 class RouterWithPredefinedRoot {
     @GetPlainText("/")

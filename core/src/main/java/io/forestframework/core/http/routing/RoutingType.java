@@ -64,5 +64,7 @@ public enum RoutingType {
     WEB_SOCKET,
 
     // See https://vertx.io/docs/vertx-web/java/#_sockjs
-    BRIDGE
+    BRIDGE,
+
+    EVENT
 }

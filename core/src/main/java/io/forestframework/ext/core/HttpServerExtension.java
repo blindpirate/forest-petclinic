@@ -10,13 +10,28 @@ import io.forestframework.utils.completablefuture.VertxCompletableFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
+import org.apiguardian.api.API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
+
+/**
+ * Manage HTTP-server-related work at startup:
+ *
+ * <ol>
+ *     <li>1. Scan and register all {@link io.forestframework.core.http.routing.Routing}s from component classes.</li>
+ *     <li>2. Start the HTTP server. </li>
+ *     <li>3. Block until the HTTP server starts. </li>
+ * </ol>
+ */
+@API(status = API.Status.INTERNAL, since = "0.1")
 public class HttpServerExtension implements Extension {
     private static final Logger LOGGER = LoggerFactory.getLogger(HttpServerExtension.class);
+    private static final Pattern BRIDGE_ROUTING_PATH_PATTERN = Pattern.compile("(/|[^*:])*/?");
+
     private String deploymentId;
     private Vertx vertx;
 
@@ -25,6 +40,7 @@ public class HttpServerExtension implements Extension {
         vertx = injector.getInstance(Vertx.class);
 
         startHttpServer(injector);
+
     }
 
     @Override
