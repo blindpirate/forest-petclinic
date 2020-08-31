@@ -13,11 +13,12 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 
 @ForestApplication
-class MultiplePreHandlersApp {
+class MultipleHandlersApp {
 }
 
 @Router("/preHandler")
@@ -76,7 +77,7 @@ class PreHandlerReturnsVoidTrueOrFalse extends AbstractTraceableRouter {
 }
 
 @ExtendWith(ForestExtension.class)
-@ForestTest(appClass = MultiplePreHandlersApp.class)
+@ForestTest(appClass = MultipleHandlersApp.class)
 @DisableAutoScan
 @IncludeComponents(classes = {PreHandlerReturnsVoidTrueOrFalse.class})
 public class MultipleHandlersIntegrationTest extends AbstractHandlerIntegrationTest {
@@ -91,10 +92,10 @@ public class MultipleHandlersIntegrationTest extends AbstractHandlerIntegrationT
             "returns/True",
             "returnsVoid"
     })
-    void prehandlersContinueWhenPreviousOnesReturnVoidOrTrueRegardlessOfAppearanceOrder(String handler) {
+    void prehandlersContinueWhenPreviousOnesReturnVoidOrTrueRegardlessOfAppearanceOrder(String handler) throws IOException {
         String path = "/preHandler/" + handler;
 
-        assert200(() -> sendHttpRequest("GET", path));
+        sendHttpRequest("GET", path).assert200();
         Assertions.assertEquals(
                 Arrays.asList(
                         path,
@@ -107,18 +108,10 @@ public class MultipleHandlersIntegrationTest extends AbstractHandlerIntegrationT
 
     @ParameterizedTest
     @CsvSource({"returns/False"})
-    void prehandlersReturnFalseThenTheFollowingHandlersAreSkipped(String handler) {
+    void prehandlersReturnFalseThenTheFollowingHandlersAreSkipped(String handler) throws IOException {
         String path = "/preHandler/" + handler;
 
-        assert200(() -> sendHttpRequest("GET", path));
+        sendHttpRequest("GET", path).assert200();
         Assertions.assertEquals(Collections.singletonList(path), router.traces);
-
     }
-}
-
-enum Message {
-    PREHANDLER1,
-    PREHANDLER2,
-    HANDLER1,
-    HANDLER2
 }

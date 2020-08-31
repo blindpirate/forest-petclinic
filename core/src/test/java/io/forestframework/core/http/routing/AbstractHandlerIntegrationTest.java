@@ -7,13 +7,12 @@ import org.apache.http.client.methods.RequestBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.util.function.Supplier;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class AbstractHandlerIntegrationTest {
     protected AbstractTraceableRouter router;
@@ -30,38 +29,45 @@ public class AbstractHandlerIntegrationTest {
         router.traces.clear();
     }
 
-    public CloseableHttpResponse sendHttpRequest(String method, String path) {
+    @AfterEach
+    void cleanUp() throws IOException {
+        client.close();
+    }
+
+    public HttpResponse sendHttpRequest(String method, String path) throws IOException {
         String uri = "http://localhost:" + port + path;
         HttpUriRequest request = RequestBuilder.create(method).setUri(uri).build();
-        CloseableHttpResponse response;
-        try {
-            response = client.execute(request);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        CloseableHttpResponse response = client.execute(request);
+        return new HttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
+    }
+
+    static class HttpResponse {
+        private final int statusCode;
+        private final String body;
+
+        public HttpResponse(int statusCode, String body) {
+            this.statusCode = statusCode;
+            this.body = body;
         }
 
-        return response;
-    }
-
-    public String assertStatuscode(Supplier<CloseableHttpResponse> excutable, int statusCode) {
-        CloseableHttpResponse response = excutable.get();
-        assertEquals(statusCode, response.getStatusLine().getStatusCode());
-
-        String result;
-        try {
-            result = EntityUtils.toString(response.getEntity());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        HttpResponse assert200() {
+            return assertStatusCode(200);
+        }
+        HttpResponse assert404() {
+            return assertStatusCode(404);
         }
 
-        return result;
-    }
+        HttpResponse assert503() {
+            return assertStatusCode(503);
+        }
 
-    public String assert200(Supplier<CloseableHttpResponse> excutable) {
-        return assertStatuscode(excutable, 200);
-    }
+        HttpResponse assertStatusCode(int expectedStatusCode) {
+            Assertions.assertEquals(expectedStatusCode, statusCode);
+            return this;
+        }
 
-    public String assert404(Supplier<CloseableHttpResponse> excutable) {
-        return assertStatuscode(excutable, 404);
+        public String getBody() {
+            return body;
+        }
     }
 }
