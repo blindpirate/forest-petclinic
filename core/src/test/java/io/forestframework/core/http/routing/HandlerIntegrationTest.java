@@ -376,7 +376,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
 
         assertThat(getTraces(), not(hasItem(Message.HANDLER.name())));
         assertThat(result, containsString("java.lang.ClassCastException"));
-        assertThat(result, containsString("class java.lang.String cannot be cast to class java.lang.Boolean"));
 
         assertThat(result, not(containsString("Resource not found")));
     }
