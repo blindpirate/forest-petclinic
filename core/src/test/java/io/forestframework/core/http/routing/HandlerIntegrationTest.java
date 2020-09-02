@@ -256,9 +256,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
         String path = "/custom500/" + handler;
         String result = sendHttpRequest("GET", path).assert200().getBody();
 
-        System.out.println("result: " + result);
-        System.out.println(this.getTraces());
-
         Assertions.assertEquals(Arrays.asList(handler, Message.CUSTOM_500_ERROR_HANDLER.name()), this.getTraces());
         assertThat(result, containsString(handler));
         assertThat(result, containsString(Message.CUSTOM_500_ERROR_HANDLER.name()));
@@ -270,9 +267,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     void error404IsHandledByCustom404ErrorHandler() throws IOException {
         String path = "/custom4XXerror/inexistence";
         String result = sendHttpRequest("GET", path).assert200().getBody();
-
-        System.out.println(getTraces());
-        System.out.println(result);
 
         Assertions.assertEquals(Collections.singletonList(Message.CUSTOM_404_ERROR_HANDLER.name()), getTraces());
         assertThat(result, containsString(path));
@@ -292,11 +286,7 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     })
     void error4XXIsHandledByCustom4XXErrorHandler(String handler) throws IOException {
         String path = "/custom4XXerror/" + handler;
-
         String result = sendHttpRequest("GET", path).getBody();
-
-        System.out.println(getTraces());
-        System.out.println(result);
 
         Assertions.assertEquals(Collections.synchronizedList(Arrays.asList(handler, Message.CUSTOM_4XX_ERROR_HANDLER.name())), getTraces());
         assertThat(result, containsString(handler));
@@ -309,8 +299,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     void exceptionsInCustomErrorHandlersAreHandledByFallbackErrorHandler() throws IOException {
         String result = sendHttpRequest("POST", "/errorInCustomErrorHandler/post").getBody();
 
-        System.out.println(result);
-        System.out.println(getTraces());
         Assertions.assertEquals(Collections.synchronizedList(Arrays.asList(Message.HANDLER.name(), Message.CUSTOM_ERROR_HANDLER.name())), getTraces());
         assertThat(result, containsString(Message.ERROR_IN_CUSTOM_ERROR_HANDLER.name()));
 
@@ -335,8 +323,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     void uncaught404ErrorIsHandledByFallbackErrorHandler() throws IOException {
         String result = sendHttpRequest("GET", "/uncaught404/inexistence").getBody();
 
-        System.out.println(result);
-
         assertThat(getTraces(), not(hasItem("uncaught404Error")));
         assertThat(getTraces(), not(hasItem(Message.CUSTOM_ERROR_HANDLER.name())));
         Assertions.assertEquals(HttpStatusCode.NOT_FOUND.name(), result);
@@ -348,8 +334,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     void httpExceptionCanBeThrownFromPreHandlersToPreventPropagation() throws IOException {
         String result = sendHttpRequest("GET", "/prehandlerError/random").getBody();
 
-        System.out.println(result);
-        System.out.println(getTraces());
         Assertions.assertEquals(
                 Arrays.asList(
                         Message.ERROR_IN_PREHANDLER.name(),
@@ -366,7 +350,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
     void shouldThrowExceptionsWhenPreHandlersNotReturnBoolean() throws IOException {
         String result = sendHttpRequest("GET", "/preHandlerNotReturnBoolean/random").getBody();
 
-        System.out.println(result);
         Assertions.assertEquals(
                 Arrays.asList(
                         "prehandlerReturnsString",
@@ -376,6 +359,7 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
 
         assertThat(getTraces(), not(hasItem(Message.HANDLER.name())));
         assertThat(result, containsString("java.lang.ClassCastException"));
+//        assertThat(result, containsString("class java.lang.String cannot be cast to class java.lang.Boolean"));
 
         assertThat(result, not(containsString("Resource not found")));
     }
