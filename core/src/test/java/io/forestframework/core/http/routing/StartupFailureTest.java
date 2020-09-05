@@ -2,31 +2,27 @@ package io.forestframework.core.http.routing;
 
 import com.github.blindpirate.annotationmagic.AnnotationMagic;
 import io.forestframework.core.Forest;
-import io.forestframework.core.ForestApplication;
 import io.forestframework.core.config.ConfigProvider;
 import io.forestframework.core.http.Router;
 import io.forestframework.ext.api.DefaultStartupContext;
 import io.forestframework.ext.api.EnableExtensions;
 import io.forestframework.ext.api.Extension;
 import io.forestframework.ext.api.StartupContext;
+import io.forestframework.ext.core.AutoRoutingScanExtension;
 import io.forestframework.ext.core.IncludeComponents;
-import io.forestframework.testfixtures.DisableAutoScan;
-import io.forestframework.testsupport.ForestExtension;
-import io.forestframework.testsupport.ForestTest;
 import io.forestframework.utils.StartupUtils;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
-@ForestApplication
+@EnableExtensions(extensions = AutoRoutingScanExtension.class)
 @IncludeComponents(classes = ThrowExceptionsWhenPreHandlersNotReturnBoolean.class)
 class StartupFailureApp {
 }
@@ -58,14 +54,7 @@ class ThrowExceptionsWhenPreHandlersNotReturnBoolean extends AbstractTraceableRo
     }
 }
 
-@ExtendWith(ForestExtension.class)
-@ForestTest(appClass = StartupFailureApp.class)
-@DisableAutoScan
-@IncludeComponents(classes = {
-        ThrowExceptionsWhenPreHandlersNotReturnBoolean.class
-})
 public class StartupFailureTest {
-
     @Test
     public void shouldThrowExceptionAtStartTimeWhenPreHandlerReturnTypeIsNotValid() {
         Class<?> appClaass = StartupFailureApp.class;
