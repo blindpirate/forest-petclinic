@@ -13,6 +13,7 @@ import io.forestframework.core.http.bridge.BridgeEventType;
 import io.forestframework.core.http.routing.DefaultBridgeRouting;
 import io.forestframework.core.http.routing.DefaultRouting;
 import io.forestframework.core.http.routing.DefaultWebSocketRouting;
+import io.forestframework.core.http.routing.PreHandler;
 import io.forestframework.core.http.routing.Route;
 import io.forestframework.core.http.routing.Routing;
 import io.forestframework.core.http.routing.RoutingManager;
@@ -26,6 +27,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apiguardian.api.API;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -62,8 +64,40 @@ public class AutoRoutingScanExtension implements Extension {
         componentClasses.stream()
                 .filter(AutoRoutingScanExtension::isRouter)
                 .flatMap(this::findRoutingHandlers)
+                .peek(this::throwExceptionIfPreHandlerReturnTypeIsNotValid)
                 .peek(routing -> deleteExistingRootStaticResourceRoutingIfNecessary(routing, routings))
                 .forEach(routing -> routings.getRouting(routing.getType()).add(routing));
+    }
+
+    // Ensure pre-handler return type is:
+    //     void / boolean / Boolean / Future<Void> / CompletableFuture<Void> / Future<Boolean> / CompletableFuture<Boolean>
+    // Throw exception otherwise.
+    private void throwExceptionIfPreHandlerReturnTypeIsNotValid(Routing routing) {
+        if (routing.getType() == RoutingType.PRE_HANDLER) {
+            String returnType = routing.getHandlerMethod().getReturnType().getName();
+            String genericReturnType = routing.getHandlerMethod().getGenericReturnType().getTypeName();
+
+            if (!isValidWhenPreHandlerReturns(returnType, genericReturnType)) {
+                throw new RuntimeException("PreHandler return type is not valid!");
+            }
+        }
+    }
+
+    private boolean isValidWhenPreHandlerReturns(String returnType, String genericReturnType) {
+        return isReturnTypeValid(returnType) || isGenericReturnTypeValid(genericReturnType);
+    }
+
+    private boolean isGenericReturnTypeValid(String genericReturnType) {
+        return "io.vertx.core.Future<java.lang.Void>".equals(genericReturnType)
+                || "java.util.concurrent.CompletableFuture<java.lang.Void>".equals(genericReturnType)
+                || "io.vertx.core.Future<java.lang.Boolean>".equals(genericReturnType)
+                || "java.util.concurrent.CompletableFuture<java.lang.Boolean>".equals(genericReturnType);
+    }
+
+    private boolean isReturnTypeValid(String returnType) {
+        return "boolean".equals(returnType)
+                || "void".equals(returnType)
+                || "java.lang.Boolean".equals(returnType);
     }
 
     // If user defined / mapping, delete the /index.html mapping, if necessary.

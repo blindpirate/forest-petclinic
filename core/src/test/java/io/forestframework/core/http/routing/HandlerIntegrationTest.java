@@ -147,16 +147,6 @@ class ErrorInPostHandler extends AbstractTraceableRouter {
 
 @Router("/uncaught404")
 class Uncaught404Error extends AbstractTraceableRouter {
-
-    @Route(value = "/post", type = RoutingType.HANDLER)
-    public void handler(HttpServerResponse response) {
-        addToTrace("uncaught404Error");
-    }
-
-    @OnError(value = "/**")
-    public void onUncaught404() {
-        addToTrace(Message.CUSTOM_ERROR_HANDLER.name());
-    }
 }
 
 @Router("/prehandlerError")
@@ -186,34 +176,6 @@ class PrehandlerErrorPreventPropagation extends AbstractTraceableRouter {
     }
 }
 
-@Router("/preHandlerNotReturnBoolean")
-class ThrowExceptionsWhenPreHandlersNotReturnBoolean extends AbstractTraceableRouter {
-
-    @PreHandler("/**")
-    public String preHandler(HttpServerRequest request) {
-        addToTrace("prehandlerReturnsString");
-        return "preHandlerReturnsString";
-    }
-
-    @Route(value = "/**", type = RoutingType.HANDLER)
-    public void handler(HttpServerRequest request, HttpServerResponse response) {
-        addToTrace(Message.HANDLER.name());
-    }
-
-    @OnError(value = "/**")
-    public void customErrorHandler(HttpServerResponse response, Throwable e) {
-        response.write(" should be handled by custom error handler. ");
-        response.write(" e.getMessage(): " + e.getMessage());
-        addToTrace(Message.CUSTOM_ERROR_HANDLER.name());
-    }
-
-    @PostHandler("/**")
-    public void postHandler(HttpServerResponse response) {
-        addToTrace("shouldContinueInPostHandler");
-    }
-}
-
-
 @ExtendWith(ForestExtension.class)
 @ForestTest(appClass = MyCustomErrorHandlerApp.class)
 @DisableAutoScan
@@ -224,7 +186,6 @@ class ThrowExceptionsWhenPreHandlersNotReturnBoolean extends AbstractTraceableRo
         ErrorInPostHandler.class,
         Uncaught404Error.class,
         PrehandlerErrorPreventPropagation.class,
-        ThrowExceptionsWhenPreHandlersNotReturnBoolean.class
 })
 public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTest {
 
@@ -234,8 +195,7 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
                    ErrorInCustomErrorHandler errorInCustomErrorHandler,
                    ErrorInPostHandler errorInPostHandler,
                    Uncaught404Error uncaught404Error,
-                   PrehandlerErrorPreventPropagation prehandlerErrorPreventPropagation,
-                   ThrowExceptionsWhenPreHandlersNotReturnBoolean throwExceptionsWhenPreHandlersNotReturnBoolean) {
+                   PrehandlerErrorPreventPropagation prehandlerErrorPreventPropagation) {
 
         this.addToRouters(myCustom500Handler);
         this.addToRouters(custom4XXErrorHandler);
@@ -243,7 +203,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
         this.addToRouters(errorInPostHandler);
         this.addToRouters(uncaught404Error);
         this.addToRouters(prehandlerErrorPreventPropagation);
-        this.addToRouters(throwExceptionsWhenPreHandlersNotReturnBoolean);
 
     }
 
@@ -342,24 +301,6 @@ public class HandlerIntegrationTest extends AbstractMultipleRoutersIntegrationTe
                 ), getTraces());
         assertThat(result, containsString(Message.ERROR_IN_PREHANDLER.name()));
         assertThat(result, containsString("should be handled by custom error handler"));
-
-        assertThat(result, not(containsString("Resource not found")));
-    }
-
-    @Test
-    void shouldThrowExceptionsWhenPreHandlersNotReturnBoolean() throws IOException {
-        String result = sendHttpRequest("GET", "/preHandlerNotReturnBoolean/random").getBody();
-
-        Assertions.assertEquals(
-                Arrays.asList(
-                        "prehandlerReturnsString",
-                        Message.CUSTOM_ERROR_HANDLER.name(),
-                        "shouldContinueInPostHandler"
-                ), getTraces());
-
-        assertThat(getTraces(), not(hasItem(Message.HANDLER.name())));
-        assertThat(result, containsString("java.lang.ClassCastException"));
-//        assertThat(result, containsString("class java.lang.String cannot be cast to class java.lang.Boolean"));
 
         assertThat(result, not(containsString("Resource not found")));
     }
