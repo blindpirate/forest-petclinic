@@ -23,12 +23,12 @@ import java.util.stream.Stream;
 
 
 @EnableExtensions(extensions = AutoRoutingScanExtension.class)
-@IncludeComponents(classes = ThrowExceptionsWhenPreHandlersNotReturnBoolean.class)
+@IncludeComponents(classes = ThrowExceptionsWhenPreHandlerReturnTypeIsNotValid.class)
 class StartupFailureApp {
 }
 
 @Router("/preHandlerNotReturnBoolean")
-class ThrowExceptionsWhenPreHandlersNotReturnBoolean extends AbstractTraceableRouter {
+class ThrowExceptionsWhenPreHandlerReturnTypeIsNotValid extends AbstractTraceableRouter {
 
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public String preHandler(HttpServerRequest request) {
@@ -57,14 +57,14 @@ class ThrowExceptionsWhenPreHandlersNotReturnBoolean extends AbstractTraceableRo
 public class StartupFailureTest {
     @Test
     public void shouldThrowExceptionAtStartTimeWhenPreHandlerReturnTypeIsNotValid() {
-        Class<?> appClaass = StartupFailureApp.class;
-        List<Extension> extensions = AnnotationMagic.getAnnotationsOnClass(appClaass, EnableExtensions.class)
+        Class<?> appClass = StartupFailureApp.class;
+        List<Extension> extensions = AnnotationMagic.getAnnotationsOnClass(appClass, EnableExtensions.class)
                 .stream().flatMap(it -> Stream.of(it.extensions()))
                 .map(StartupUtils::instantiateWithDefaultConstructor)
                 .map(it -> (Extension) it)
                 .collect(Collectors.toList());
 
-        StartupContext context = new DefaultStartupContext(Vertx.vertx(), appClaass, ConfigProvider.load(), extensions);
+        StartupContext context = new DefaultStartupContext(Vertx.vertx(), appClass, ConfigProvider.load(), extensions);
 
         RuntimeException e = Assertions.assertThrows(RuntimeException.class, () -> Forest.run(context));
         Assertions.assertEquals("PreHandler return type is not valid!", e.getMessage());
