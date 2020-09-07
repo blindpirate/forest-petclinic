@@ -14,9 +14,9 @@
 ## 主处理器（Handler）
 
 路由必须有一个与之关联的主处理器（Handler）来接收并处理请求。
-因此，程序中至少有一个主处理器（Handler），否则程序运行会报错：`NOT_FOUND`。
-可以通过 `@Route` 注解来设置主处理器。
-主处理器通过调用对应的方法来处理请求。方法必须是 `public` 的，否则程序运行也会报错：`NOT_FOUND`。
+因此，程序中至少有一个主处理器（Handler），否则程序运行会报错：`404 NOT_FOUND`。
+可以通过 `@Route(type = RoutingType.HANDLER)` 注解来设置主处理器。
+主处理器通过调用对应的方法来处理请求。方法必须是 `public` 的，否则程序运行也会报错：`404 NOT_FOUND`。
 
 ```
 @ForestApplication
@@ -74,19 +74,19 @@ public class Example {
 
 程序中可以有多个主处理器，处理同一个路径的请求。
 这时需要通过 `@Route` 注解的 `order` 属性来定义多个主处理器之间的先后顺序。
-`order` 属性值可以是从 0 开始的任意整数，数值越小，优先级越高，优先执行。
+`order` 属性值可以是任意整数，包括负数。数值越小，优先级越高，优先执行。
 
 ```
 @ForestApplication
 public class Example {
 
-    // Handler2 的 order 属性值大于 Handler1，因此其后执行
+    // handler2 的 order 属性值大于 handler1，因此其后执行
     @Route(path = "/foo", type = RoutingType.HANDLER, methods = HttpMethod.GET, order = 1)
     public void handle2(HttpServerResponse response) {
         response.write("handler2 is handling next\n", "UTF-8");
     }
 
-    // Handler1 的 order 属性值小于 Handler2，因此优先执行
+    // handler1 的 order 属性值小于 handler2，因此优先执行
     @Route(path = "/foo", type = RoutingType.HANDLER, methods = HttpMethod.GET, order = 0)
     public void handle1(HttpServerResponse response) {
         response.write("handler1 is handling first\n", "UTF-8");
@@ -148,7 +148,7 @@ public class Example {
 }
 ```
 
-上面的例子中，前处理器实现了对请求的拦截，和简单的处理，并把请求传递给其他对前处理器或主处理器。
+上面的例子中，前处理器实现了对请求的拦截，和简单的处理，并把请求传递给其他的前处理器或主处理器。
 如果前处理器的返回值类型为布尔值，当对请求的处理结果为 `false` 的时候，
 请求不会传递给其他的前处理器或主处理器，实现对请求的彻底拦截（short-circuit）。
 
@@ -258,7 +258,7 @@ public class Example {
 
 ## 错误处理器 （Error Handler）
 
-当处理器抛出异常或者程序执行过程中发生异常，就会触发错误处理器。
+当处理器抛出异常或者程序执行过程中发生异常，会触发错误处理器。
 比如请求的路径不匹配，请求的方法不匹配，请求被处理器处理的过程中抛出异常，
 导致程序无法正常执行等。
 如果没有自定义错误处理器，会触发系统默认的错误处理器。
@@ -323,7 +323,7 @@ public class Example {
 
 ## 后处理器（PostHandler）
 
-后处理器在前处理器和主处理器之后执行。可以用于资源回收。
+后处理器在前处理器和主处理器之后执行。可以用于资源回收等清理工作。
 
 ```
 @ForestApplication
@@ -385,7 +385,7 @@ public class Example {
 ### 基本路径匹配
 
 
-路由映射是取决于请求方法，请求路径，和请求体的多媒体类型。你可以用基本路径匹配路由，比如, `@Get("/some/path")` 
+路由映射取决于请求方法，请求路径，和请求体的多媒体类型。你可以用基本路径匹配路由，比如，`@Get("/some/path")` 
 或者 `@Route(method=GET, path="/some/path", type=PRE_HANDLER)`.
 
 ```
