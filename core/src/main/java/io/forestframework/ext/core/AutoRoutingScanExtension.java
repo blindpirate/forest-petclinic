@@ -86,6 +86,7 @@ public class AutoRoutingScanExtension implements Extension {
 
     private boolean isPreHandlerReturnTypeValid(Routing routing) {
         Class<?> returnType = routing.getHandlerMethod().getReturnType();
+
         Type genericReturnType = routing.getHandlerMethod().getGenericReturnType();
 
         if (genericReturnType instanceof ParameterizedType) {
@@ -108,7 +109,8 @@ public class AutoRoutingScanExtension implements Extension {
     private boolean isReturnTypeValid(Class<?> returnType) {
         return returnType == boolean.class
                 || returnType == void.class
-                || returnType == Boolean.class;
+                || returnType == Boolean.class
+                || returnType == Object.class; // Kotlin Unit, let's be lenient
     }
 
     // If user defined / mapping, delete the /index.html mapping, if necessary.
