@@ -22,6 +22,7 @@ import io.forestframework.core.http.websocket.WebSocketEventType;
 import io.forestframework.core.modules.WebRequestHandlingModule;
 import io.forestframework.ext.api.Extension;
 import io.forestframework.ext.api.StartupContext;
+import io.vertx.core.Future;
 import org.apache.commons.lang3.StringUtils;
 import org.apiguardian.api.API;
 
@@ -30,6 +31,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -64,7 +66,7 @@ public class AutoRoutingScanExtension implements Extension {
         componentClasses.stream()
                 .filter(AutoRoutingScanExtension::isRouter)
                 .flatMap(this::findRoutingHandlers)
-                .peek(this::throwExceptionIfPreHandlerReturnTypeIsNotValid)
+                .peek(this::validate)
                 .peek(routing -> deleteExistingRootStaticResourceRoutingIfNecessary(routing, routings))
                 .forEach(routing -> routings.getRouting(routing.getType()).add(routing));
     }
@@ -72,9 +74,9 @@ public class AutoRoutingScanExtension implements Extension {
     // Ensure pre-handler return type is:
     //     void / boolean / Boolean / Future<Void> / CompletableFuture<Void> / Future<Boolean> / CompletableFuture<Boolean>
     // Throw exception otherwise.
-    private void throwExceptionIfPreHandlerReturnTypeIsNotValid(Routing routing) {
+    private void validate(Routing routing) {
         if (isPreHandlerReturnTypeNotValid(routing)) {
-            throw new RuntimeException("PreHandler return type is not valid!");
+            throw new RuntimeException("PreHandler return type is not valid: " + routing.getHandlerMethod());
         }
     }
 
@@ -97,10 +99,10 @@ public class AutoRoutingScanExtension implements Extension {
         Type rawType = paramType.getRawType();
         Type actualTypeArgument = paramType.getActualTypeArguments()[0];
 
-        return  rawType == io.vertx.core.Future.class && actualTypeArgument == java.lang.Void.class
-                || rawType == java.util.concurrent.CompletableFuture.class && actualTypeArgument == java.lang.Void.class
-                || rawType == io.vertx.core.Future.class && actualTypeArgument == java.lang.Boolean.class
-                || rawType == java.util.concurrent.CompletableFuture.class && actualTypeArgument == java.lang.Boolean.class;
+        return (rawType == Future.class && actualTypeArgument == Void.class)
+                || (rawType == CompletableFuture.class && actualTypeArgument == Void.class)
+                || (rawType == Future.class && actualTypeArgument == Boolean.class)
+                || (rawType == CompletableFuture.class && actualTypeArgument == Boolean.class);
     }
 
     private boolean isReturnTypeValid(Class<?> returnType) {

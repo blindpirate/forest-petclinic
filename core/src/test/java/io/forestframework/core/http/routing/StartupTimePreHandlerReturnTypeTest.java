@@ -11,21 +11,19 @@ import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 class PreHandlerReturnsString {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public String preHandler(HttpServerRequest request) {
         return "shouldNotBeHere";
@@ -38,7 +36,6 @@ class PreHandlerReturnsString {
 }
 
 class PreHandlerReturnsFutureString extends AbstractTraceableRouter {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public CompletableFuture<String> preHandler() {
         return new CompletableFuture<>();
@@ -51,7 +48,6 @@ class PreHandlerReturnsFutureString extends AbstractTraceableRouter {
 }
 
 class PreHandlerReturnsVoid {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public void preHandler(HttpServerRequest request) {
         throw new UnsupportedOperationException();
@@ -64,7 +60,6 @@ class PreHandlerReturnsVoid {
 }
 
 class PreHandlerReturnsBoolean {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public Boolean preHandler(HttpServerRequest request) {
         return Boolean.TRUE;
@@ -77,7 +72,6 @@ class PreHandlerReturnsBoolean {
 }
 
 class PreHandlerReturnsbooleanType {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public boolean preHandler(HttpServerRequest request) {
         return false;
@@ -90,7 +84,6 @@ class PreHandlerReturnsbooleanType {
 }
 
 class PreHandlerReturnsCompletableFutureVoid {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public CompletableFuture<Void> preHandler(HttpServerRequest request) {
         return new CompletableFuture<>();
@@ -103,7 +96,6 @@ class PreHandlerReturnsCompletableFutureVoid {
 }
 
 class PreHandlerReturnsCompletableFutureBoolean {
-
     @Route(value = "/**", type = RoutingType.PRE_HANDLER)
     public CompletableFuture<Boolean> preHandler(HttpServerRequest request) {
         return new CompletableFuture<>();
@@ -115,23 +107,20 @@ class PreHandlerReturnsCompletableFutureBoolean {
     }
 }
 
+@ExtendWith(MockitoExtension.class)
 public class StartupTimePreHandlerReturnTypeTest {
-    Extension autoRoutingScanExtension;
+    Extension autoRoutingScanExtension = new AutoRoutingScanExtension();
+
+    @Mock
     Injector injector;
+
+    @Mock
     RoutingManager mockManager;
-    List<Class<?>> mockComponentClasses;
+
+    List<Class<?>> mockComponentClasses = new ArrayList<>();
 
     @BeforeEach
     void init() {
-        MockitoAnnotations.initMocks(this);
-
-        autoRoutingScanExtension = new AutoRoutingScanExtension();
-        injector = Mockito.mock(Injector.class);
-        mockManager = Mockito.mock(RoutingManager.class);
-
-        List<Class<?>> actualClasses = new ArrayList<>();
-        mockComponentClasses = spy(actualClasses);
-
         // @formatter:off
         when(injector.getInstance(Key.get(new TypeLiteral<List<Class<?>>>() { }, ComponentClasses.class))).thenReturn(mockComponentClasses);
         // @formatter:on
@@ -143,7 +132,6 @@ public class StartupTimePreHandlerReturnTypeTest {
     @ValueSource(classes = {PreHandlerReturnsString.class, PreHandlerReturnsFutureString.class})
     void throwRuntimeExceptionWhenPreHandlerReturnTypeIsNotValid(Class<?> cls) {
         mockComponentClasses.add(cls);
-
         Assertions.assertThrows(RuntimeException.class, () -> autoRoutingScanExtension.afterInjector(injector));
     }
 
@@ -157,11 +145,6 @@ public class StartupTimePreHandlerReturnTypeTest {
     })
     void testSuccessWhenPreHandlerReturnTypeIsValid(Class<?> cls) {
         mockComponentClasses.add(cls);
-
-        try {
-            autoRoutingScanExtension.afterInjector(injector);
-        } catch (Exception e) {
-            fail("should not throw exception!");
-        }
+        autoRoutingScanExtension.afterInjector(injector);
     }
 }
