@@ -26,6 +26,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.apiguardian.api.API;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -62,8 +64,49 @@ public class AutoRoutingScanExtension implements Extension {
         componentClasses.stream()
                 .filter(AutoRoutingScanExtension::isRouter)
                 .flatMap(this::findRoutingHandlers)
+                .peek(this::throwExceptionIfPreHandlerReturnTypeIsNotValid)
                 .peek(routing -> deleteExistingRootStaticResourceRoutingIfNecessary(routing, routings))
                 .forEach(routing -> routings.getRouting(routing.getType()).add(routing));
+    }
+
+    // Ensure pre-handler return type is:
+    //     void / boolean / Boolean / Future<Void> / CompletableFuture<Void> / Future<Boolean> / CompletableFuture<Boolean>
+    // Throw exception otherwise.
+    private void throwExceptionIfPreHandlerReturnTypeIsNotValid(Routing routing) {
+        if (isPreHandlerReturnTypeNotValid(routing)) {
+            throw new RuntimeException("PreHandler return type is not valid!");
+        }
+    }
+
+    private boolean isPreHandlerReturnTypeNotValid(Routing routing) {
+        return routing.getType() == RoutingType.PRE_HANDLER && !isPreHandlerReturnTypeValid(routing);
+    }
+
+    private boolean isPreHandlerReturnTypeValid(Routing routing) {
+        Class<?> returnType = routing.getHandlerMethod().getReturnType();
+        Type genericReturnType = routing.getHandlerMethod().getGenericReturnType();
+
+        if (genericReturnType instanceof ParameterizedType) {
+            return isGenericReturnTypeValid(genericReturnType);
+        }
+        return isReturnTypeValid(returnType);
+    }
+
+    private boolean isGenericReturnTypeValid(Type genericReturnType) {
+        ParameterizedType paramType = (ParameterizedType) genericReturnType;
+        Type rawType = paramType.getRawType();
+        Type actualTypeArgument = paramType.getActualTypeArguments()[0];
+
+        return  rawType == io.vertx.core.Future.class && actualTypeArgument == java.lang.Void.class
+                || rawType == java.util.concurrent.CompletableFuture.class && actualTypeArgument == java.lang.Void.class
+                || rawType == io.vertx.core.Future.class && actualTypeArgument == java.lang.Boolean.class
+                || rawType == java.util.concurrent.CompletableFuture.class && actualTypeArgument == java.lang.Boolean.class;
+    }
+
+    private boolean isReturnTypeValid(Class<?> returnType) {
+        return returnType == boolean.class
+                || returnType == void.class
+                || returnType == Boolean.class;
     }
 
     // If user defined / mapping, delete the /index.html mapping, if necessary.
