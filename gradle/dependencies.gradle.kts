@@ -22,7 +22,7 @@ val seleniumVersion = "3.141.59"
 val groovyVersion = "2.5.12"
 val findBugsAnnotationVersion = "3.0.1"
 val httpclient = "4.5.12"
-val mockitoVersion = "1.10.19"
+val mockitoVersion = "2.0.2-beta"
 
 val libs = listOf(
         "io.vertx:vertx-core:$vertxVersion",
