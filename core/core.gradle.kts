@@ -4,7 +4,7 @@ val libs: (String) -> String by rootProject.ext
 val configurePublication: Project.() -> Unit by rootProject.ext
 
 dependencies {
-    testImplementation(libs("mockito-all"))
+    testImplementation(libs("mockito-core"))
     testImplementation(libs("httpclient"))
     api(libs("vertx-core"))
     implementation(libs("vertx-web"))
