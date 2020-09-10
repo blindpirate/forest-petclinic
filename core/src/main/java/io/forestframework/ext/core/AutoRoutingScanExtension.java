@@ -1,7 +1,6 @@
 package io.forestframework.ext.core;
 
 import com.github.blindpirate.annotationmagic.AnnotationMagic;
-import com.google.common.net.MediaType;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -36,7 +35,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static io.forestframework.utils.StartupUtils.isBlockingMethod;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 
 /**
  * Manage routing-related work at startup.
@@ -161,7 +160,7 @@ public class AutoRoutingScanExtension implements Extension {
     @SuppressWarnings({"checkstyle:parameterassignment", "UnstableApiUsage"})
     private Routing createRouting(Route route, String path, String regexPath, Method handlerMethod) {
         if (AnnotationMagic.instanceOf(route, Bridge.class)) {
-            List<BridgeEventType> eventTypes = Arrays.asList(AnnotationMagic.cast(route, Bridge.class).eventTypes());
+            List<BridgeEventType> eventTypes = asList(AnnotationMagic.cast(route, Bridge.class).eventTypes());
             if (!regexPath.isEmpty()) {
                 throw new IllegalArgumentException("Bridge routing doesn't support regex, but you used " + regexPath + " for " + handlerMethod);
             } else if (!BRIDGE_ROUTING_PATH_PATTERN.matcher(path).matches()) {
@@ -179,7 +178,7 @@ public class AutoRoutingScanExtension implements Extension {
                         eventTypes);
             }
         } else if (AnnotationMagic.instanceOf(route, WebSocket.class)) {
-            List<WebSocketEventType> eventTypes = Arrays.asList(AnnotationMagic.cast(route, WebSocket.class).eventTypes());
+            List<WebSocketEventType> eventTypes = asList(AnnotationMagic.cast(route, WebSocket.class).eventTypes());
             return new DefaultWebSocketRouting(
                     isBlockingMethod(handlerMethod),
                     route.type(),
@@ -193,11 +192,11 @@ public class AutoRoutingScanExtension implements Extension {
                     route.type(),
                     path,
                     regexPath,
-                    Arrays.asList(route.methods()),
+                    asList(route.methods()),
                     handlerMethod,
                     route.order(),
-                    singletonList(MediaType.ANY_TYPE.toString()), // TODO: produces/consumes
-                    singletonList(MediaType.ANY_TYPE.toString()));
+                    asList(route.produces()),
+                    asList(route.consumes()));
         }
     }
 
