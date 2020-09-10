@@ -1,22 +1,14 @@
 package io.forestframework.core.http.routing;
 
 import com.google.inject.Inject;
-import com.google.inject.internal.cglib.core.$RejectModifierPredicate;
 import io.forestframework.core.ForestApplication;
-import io.forestframework.core.http.HttpException;
 import io.forestframework.core.http.HttpMethod;
-import io.forestframework.core.http.HttpStatusCode;
 import io.forestframework.core.http.Router;
 import io.forestframework.ext.core.IncludeComponents;
 import io.forestframework.testfixtures.DisableAutoScan;
 import io.forestframework.testsupport.ForestExtension;
 import io.forestframework.testsupport.ForestTest;
 import io.vertx.core.http.HttpServerResponse;
-import org.apache.http.HttpHeaders;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.client.methods.RequestBuilder;
-import org.apache.http.util.EntityUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -41,7 +33,7 @@ class Default4xxErrorHandler extends AbstractTraceableRouter {
         response.write(Message.CUSTOM_405_ERROR_HANDLER.name());
     }
 
-    @Route(path = "/NOT_ACCEPTABLE", type = RoutingType.HANDLER)
+    @Route(path = "/NOT_ACCEPTABLE", type = RoutingType.HANDLER, produces = "text/html")
     public void handler406(HttpServerResponse response) {
         addToTrace(Message.CUSTOM_406_ERROR_HANDLER.name());
         response.putHeader("content-type", "text/html");
