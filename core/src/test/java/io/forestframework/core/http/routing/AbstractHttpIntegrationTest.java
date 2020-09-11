@@ -26,7 +26,8 @@ public class AbstractHttpIntegrationTest {
         HttpUriRequest request = RequestBuilder
                 .create(method)
                 .setUri(uri)
-                .setHeader("Accept", String.valueOf(ContentType.APPLICATION_JSON))
+                .setHeader("Accept", "*/*")
+//                .setHeader("Accept", String.valueOf(ContentType.APPLICATION_JSON))
                 .setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
 //                .setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
 //                .setHeader(HttpHeaders.CONTENT_TYPE, "text/html")
@@ -58,6 +59,10 @@ public class AbstractHttpIntegrationTest {
 
         HttpResponse assert406() {
             return assertStatusCode(406);
+        }
+
+        HttpResponse assert415() {
+            return assertStatusCode(415);
         }
 
         HttpResponse assert500() {
