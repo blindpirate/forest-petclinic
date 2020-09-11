@@ -74,13 +74,13 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
 
     /**
      * 200 If everything fine
-     *
+     * <p>
      * 404 If no route matches the path
-     *
+     * <p>
      * 405 If a route matches the path but don’t match the HTTP Method
-     *
+     * <p>
      * 406 If a route matches the path and the method but It can’t provide a response with a content type matching Accept header
-     *
+     * <p>
      * 415 If a route matches the path and the method but It can’t accept the Content-type
      */
     public MainHandlerMatchResult getMainHandlerMatchResult() {
@@ -185,9 +185,9 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
                     Stream.of(StringUtils.split(header, ',')).map(String::trim).map(MediaType::parse).collect(Collectors.toList());
             List<MediaType> serverMediaTypes = producesOrConsumes.stream().map(MediaType::parse).collect(Collectors.toList());
 
-            return headers.stream().anyMatch(headerMediaType ->
-                    serverMediaTypes.stream().anyMatch(headerMediaType::is)
-            );
+//            return headers.stream().anyMatch(headerMediaType -> serverMediaTypes.stream().anyMatch(headerMediaType::is));
+            return serverMediaTypes.stream().anyMatch(serverMediaType -> headers.stream().anyMatch(serverMediaType::is));
+
         }
 
         private boolean httpMethodNotAllowed(Routing routing, io.vertx.core.http.HttpMethod method) {

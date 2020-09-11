@@ -22,15 +22,16 @@ public class AbstractHttpIntegrationTest {
     protected Integer port;
 
     public HttpResponse sendHttpRequest(String method, String path) throws IOException {
+        return sendHttpRequest(method, path, "*/*", "*/*");
+    }
+
+    public HttpResponse sendHttpRequest(String method, String path, String accept, String header) throws IOException {
         String uri = "http://localhost:" + port + path;
         HttpUriRequest request = RequestBuilder
                 .create(method)
                 .setUri(uri)
-                .setHeader("Accept", "*/*")
-//                .setHeader("Accept", String.valueOf(ContentType.APPLICATION_JSON))
-                .setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-//                .setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
-//                .setHeader(HttpHeaders.CONTENT_TYPE, "text/html")
+                .setHeader("Accept", accept)
+                .setHeader(HttpHeaders.CONTENT_TYPE, header)
                 .build();
         CloseableHttpResponse response = client.execute(request);
         return new HttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
