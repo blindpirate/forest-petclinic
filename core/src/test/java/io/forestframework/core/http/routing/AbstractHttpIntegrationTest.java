@@ -22,7 +22,13 @@ public class AbstractHttpIntegrationTest {
     protected Integer port;
 
     public HttpResponse sendHttpRequest(String method, String path) throws IOException {
-        return sendHttpRequest(method, path, "*/*", "*/*");
+        String uri = "http://localhost:" + port + path;
+        HttpUriRequest request = RequestBuilder
+                .create(method)
+                .setUri(uri)
+                .build();
+        CloseableHttpResponse response = client.execute(request);
+        return new HttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
     }
 
     public HttpResponse sendHttpRequest(String method, String path, String accept, String header) throws IOException {
