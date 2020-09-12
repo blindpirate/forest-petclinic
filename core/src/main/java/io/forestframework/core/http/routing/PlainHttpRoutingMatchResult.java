@@ -169,30 +169,34 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
         private HttpStatusCode mediaTypeMatch(HttpServerRequest request, Routing routing) {
             if (httpMethodNotAllowed(routing, request.method())) {
                 return HttpStatusCode.METHOD_NOT_ALLOWED;
-            } else if (!mediaTypeMatch(request, HEADER_ACCEPT, routing.getProduces(), null)) {
+            } else if (!isProducesMatch(request, HEADER_ACCEPT, routing.getProduces())) {
                 return HttpStatusCode.NOT_ACCEPTABLE;
-            } else if (!mediaTypeMatch(request, HEADER_CONTENT_TYPE, null, routing.getConsumes())) {
+            } else if (!isConsumesMatch(request, HEADER_CONTENT_TYPE,routing.getConsumes())) {
                 return HttpStatusCode.UNSUPPORTED_MEDIA_TYPE;
             } else {
                 return HttpStatusCode.OK;
             }
         }
 
-        private boolean mediaTypeMatch(HttpServerRequest request, CharSequence headerName, List<String> produces, List<String> consumes) {
+        private boolean isProducesMatch(HttpServerRequest request, CharSequence headerName, List<String> produces) {
+            List<MediaType> headers = getMediaTypes(request, headerName);
+            List<MediaType> serverMediaTypes = produces.stream().map(MediaType::parse).collect(Collectors.toList());
+
+            return serverMediaTypes.stream().allMatch(serverMediaType -> headers.stream().anyMatch(serverMediaType::is));
+        }
+
+        private boolean isConsumesMatch(HttpServerRequest request, CharSequence headerName, List<String> consumes) {
+            List<MediaType> headers = getMediaTypes(request, headerName);
+            List<MediaType> serverMediaTypes = consumes.stream().map(MediaType::parse).collect(Collectors.toList());
+
+            return headers.stream().allMatch(headerMediaType -> serverMediaTypes.stream().anyMatch(headerMediaType::is));
+        }
+
+        private List<MediaType> getMediaTypes(HttpServerRequest request, CharSequence headerName) {
             String header = request.getHeader(headerName);
 
-            List<MediaType> headers = header == null ? ANY :
+            return header == null ? ANY :
                     Stream.of(StringUtils.split(header, ',')).map(String::trim).map(MediaType::parse).collect(Collectors.toList());
-
-            List<MediaType> serverMediaTypes;
-
-            if (produces != null) {
-                serverMediaTypes = produces.stream().map(MediaType::parse).collect(Collectors.toList());
-                return serverMediaTypes.stream().allMatch(serverMediaType -> headers.stream().anyMatch(serverMediaType::is));
-            } else {
-                serverMediaTypes = consumes.stream().map(MediaType::parse).collect(Collectors.toList());
-                return headers.stream().allMatch(headerMediaType -> serverMediaTypes.stream().anyMatch(headerMediaType::is));
-            }
         }
 
         private boolean httpMethodNotAllowed(Routing routing, io.vertx.core.http.HttpMethod method) {
