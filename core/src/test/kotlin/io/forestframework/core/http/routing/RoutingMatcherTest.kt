@@ -279,7 +279,7 @@ class RoutingMatcherTest {
         )
 
         every { request.path() } returns "/user/12345"
-        every { request.getHeader(OptimizedHeaders.HEADER_ACCEPT) } returns "text/html"
+        every { request.getHeader(OptimizedHeaders.HEADER_ACCEPT) } returns "text/*"
 
         val results = RoutingMatcher(routingManager).matchPlain(request)
 
@@ -303,7 +303,7 @@ class RoutingMatcherTest {
         )
 
         every { request.path() } returns "/user/12345"
-        every { request.getHeader(OptimizedHeaders.HEADER_ACCEPT) } returns "text/html"
+        every { request.getHeader(OptimizedHeaders.HEADER_CONTENT_TYPE) } returns "text/html"
 
         val results = RoutingMatcher(routingManager).matchPlain(request)
 
