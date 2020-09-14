@@ -206,7 +206,7 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
         }
 
         private boolean matchParameters(MediaType acceptedMediaType, MediaType mediaType) {
-            if (acceptedMediaType.parameters() != null && mediaType.parameters() != null) {
+            if (!acceptedMediaType.parameters().isEmpty() && !mediaType.parameters().isEmpty()) {
                 return mediaType.parameters().entries().containsAll(acceptedMediaType.parameters().entries());
             }
             return true;
