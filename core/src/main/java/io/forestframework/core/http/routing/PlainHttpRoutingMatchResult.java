@@ -169,27 +169,27 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
         private HttpStatusCode mediaTypeMatch(HttpServerRequest request, Routing routing) {
             if (httpMethodNotAllowed(routing, request.method())) {
                 return HttpStatusCode.METHOD_NOT_ALLOWED;
-            } else if (!isProducesMatch(request, HEADER_ACCEPT, routing.getProduces())) {
+            } else if (!producesMatch(request, HEADER_ACCEPT, routing.getProduces())) {
                 return HttpStatusCode.NOT_ACCEPTABLE;
-            } else if (!isConsumesMatch(request, HEADER_CONTENT_TYPE, routing.getConsumes())) {
+            } else if (!consumesMatch(request, HEADER_CONTENT_TYPE, routing.getConsumes())) {
                 return HttpStatusCode.UNSUPPORTED_MEDIA_TYPE;
             } else {
                 return HttpStatusCode.OK;
             }
         }
 
-        private boolean isProducesMatch(HttpServerRequest request, CharSequence headerName, List<String> produces) {
-            List<MediaType> headers = getMediaTypes(request, headerName);
-            List<MediaType> serverMediaTypes = produces.stream().map(MediaType::parse).collect(Collectors.toList());
-
-            return serverMediaTypes.stream().allMatch(serverMediaType -> headers.stream().anyMatch(serverMediaType::is));
+        private boolean producesMatch(HttpServerRequest request, CharSequence headerName, List<String> produces) {
+            return mediaTypeMatch(getMediaTypes(request, headerName), getServerMediaTypes(produces));
         }
 
-        private boolean isConsumesMatch(HttpServerRequest request, CharSequence headerName, List<String> consumes) {
-            List<MediaType> headers = getMediaTypes(request, headerName);
-            List<MediaType> serverMediaTypes = consumes.stream().map(MediaType::parse).collect(Collectors.toList());
+        private boolean consumesMatch(HttpServerRequest request, CharSequence headerName, List<String> consumes) {
+            return mediaTypeMatch(getServerMediaTypes(consumes), getMediaTypes(request, headerName));
+        }
 
-            return headers.stream().allMatch(headerMediaType -> serverMediaTypes.stream().anyMatch(headerMediaType::is));
+        private boolean mediaTypeMatch(List<MediaType> some, List<MediaType> others) {
+            return others.stream().allMatch(
+                    otherMediaType -> some.stream().anyMatch(someMediaType -> otherMediaType.withoutParameters().is(someMediaType.withoutParameters()) && matchParameters(someMediaType, otherMediaType))
+            );
         }
 
         private List<MediaType> getMediaTypes(HttpServerRequest request, CharSequence headerName) {
@@ -197,6 +197,19 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
 
             return header == null ? ANY :
                     Stream.of(StringUtils.split(header, ',')).map(String::trim).map(MediaType::parse).collect(Collectors.toList());
+        }
+
+        private static List<MediaType> getServerMediaTypes(List<String> producesOrConsumes) {
+            return producesOrConsumes.stream()
+                    .map(MediaType::parse)
+                    .collect(Collectors.toList());
+        }
+
+        private boolean matchParameters(MediaType acceptedMediaType, MediaType mediaType) {
+            if (acceptedMediaType.parameters() != null && mediaType.parameters() != null) {
+                return mediaType.parameters().entries().containsAll(acceptedMediaType.parameters().entries());
+            }
+            return true;
         }
 
         private boolean httpMethodNotAllowed(Routing routing, io.vertx.core.http.HttpMethod method) {
@@ -235,4 +248,6 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
             return Objects.hash(routing);
         }
     }
+
+
 }
