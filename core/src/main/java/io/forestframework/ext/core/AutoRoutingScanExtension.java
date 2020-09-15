@@ -1,7 +1,6 @@
 package io.forestframework.ext.core;
 
 import com.github.blindpirate.annotationmagic.AnnotationMagic;
-import com.google.common.net.MediaType;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -36,7 +35,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static io.forestframework.utils.StartupUtils.isBlockingMethod;
-import static java.util.Collections.singletonList;
 
 /**
  * Manage routing-related work at startup.
@@ -196,8 +194,8 @@ public class AutoRoutingScanExtension implements Extension {
                 Arrays.asList(route.methods()),
                 handlerMethod,
                 route.order(),
-                singletonList(MediaType.ANY_TYPE.toString()), // TODO: produces/consumes
-                singletonList(MediaType.ANY_TYPE.toString()));
+                Arrays.asList(route.produces()),
+                Arrays.asList(route.consumes()));
         }
     }
 

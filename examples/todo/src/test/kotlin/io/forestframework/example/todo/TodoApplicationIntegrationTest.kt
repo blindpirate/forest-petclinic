@@ -88,8 +88,7 @@ abstract class TodoApplicationIntegrationTest {
     val objectMapper = ObjectMapper()
 
     val headers = HeadersMultiMap().apply {
-//        add(OptimizedHeaders.HEADER_ACCEPT, OptimizedHeaders.CONTENT_TYPE_APPLICATION_JSON)
-        add(OptimizedHeaders.HEADER_ACCEPT, "*/*")
+        add(OptimizedHeaders.HEADER_ACCEPT, OptimizedHeaders.CONTENT_TYPE_APPLICATION_JSON)
         add(OptimizedHeaders.HEADER_CONTENT_TYPE, OptimizedHeaders.CONTENT_TYPE_APPLICATION_JSON)
     }
 
