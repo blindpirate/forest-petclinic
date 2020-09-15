@@ -1,6 +1,7 @@
 package io.forestframework.ext.core;
 
 import com.github.blindpirate.annotationmagic.AnnotationMagic;
+import com.google.common.net.MediaType;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
@@ -35,7 +36,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static io.forestframework.utils.StartupUtils.isBlockingMethod;
-import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * Manage routing-related work at startup.
@@ -63,11 +64,11 @@ public class AutoRoutingScanExtension implements Extension {
         // @formatter:on
 
         componentClasses.stream()
-                .filter(AutoRoutingScanExtension::isRouter)
-                .flatMap(this::findRoutingHandlers)
-                .peek(this::validate)
-                .peek(routing -> deleteExistingRootStaticResourceRoutingIfNecessary(routing, routings))
-                .forEach(routing -> routings.getRouting(routing.getType()).add(routing));
+            .filter(AutoRoutingScanExtension::isRouter)
+            .flatMap(this::findRoutingHandlers)
+            .peek(this::validate)
+            .peek(routing -> deleteExistingRootStaticResourceRoutingIfNecessary(routing, routings))
+            .forEach(routing -> routings.getRouting(routing.getType()).add(routing));
     }
 
     // Ensure pre-handler return type is:
@@ -100,16 +101,16 @@ public class AutoRoutingScanExtension implements Extension {
         Type actualTypeArgument = paramType.getActualTypeArguments()[0];
 
         return (rawType == Future.class && actualTypeArgument == Void.class)
-                || (rawType == CompletableFuture.class && actualTypeArgument == Void.class)
-                || (rawType == Future.class && actualTypeArgument == Boolean.class)
-                || (rawType == CompletableFuture.class && actualTypeArgument == Boolean.class);
+            || (rawType == CompletableFuture.class && actualTypeArgument == Void.class)
+            || (rawType == Future.class && actualTypeArgument == Boolean.class)
+            || (rawType == CompletableFuture.class && actualTypeArgument == Boolean.class);
     }
 
     private boolean isReturnTypeValid(Class<?> returnType) {
         return returnType == boolean.class
-                || returnType == void.class
-                || returnType == Boolean.class
-                || returnType == Object.class; // Kotlin Unit, let's be lenient
+            || returnType == void.class
+            || returnType == Boolean.class
+            || returnType == Object.class; // Kotlin Unit, let's be lenient
     }
 
     // If user defined / mapping, delete the /index.html mapping, if necessary.
@@ -121,13 +122,13 @@ public class AutoRoutingScanExtension implements Extension {
 
     private static boolean isRouter(Class<?> klass) {
         return AnnotationMagic.isAnnotationPresent(klass, Router.class)
-                || Arrays.stream(klass.getMethods()).anyMatch(AutoRoutingScanExtension::isRouteMethod);
+            || Arrays.stream(klass.getMethods()).anyMatch(AutoRoutingScanExtension::isRouteMethod);
     }
 
     private Stream<Routing> findRoutingHandlers(Class<?> klass) {
         return Stream.of(klass.getMethods())
-                .filter(AutoRoutingScanExtension::isRouteMethod)
-                .map(method -> toRouting(klass, method));
+            .filter(AutoRoutingScanExtension::isRouteMethod)
+            .map(method -> toRouting(klass, method));
     }
 
     private static boolean isRouteMethod(Method method) {
@@ -160,7 +161,7 @@ public class AutoRoutingScanExtension implements Extension {
     @SuppressWarnings({"checkstyle:parameterassignment", "UnstableApiUsage"})
     private Routing createRouting(Route route, String path, String regexPath, Method handlerMethod) {
         if (AnnotationMagic.instanceOf(route, Bridge.class)) {
-            List<BridgeEventType> eventTypes = asList(AnnotationMagic.cast(route, Bridge.class).eventTypes());
+            List<BridgeEventType> eventTypes = Arrays.asList(AnnotationMagic.cast(route, Bridge.class).eventTypes());
             if (!regexPath.isEmpty()) {
                 throw new IllegalArgumentException("Bridge routing doesn't support regex, but you used " + regexPath + " for " + handlerMethod);
             } else if (!BRIDGE_ROUTING_PATH_PATTERN.matcher(path).matches()) {
@@ -170,33 +171,33 @@ public class AutoRoutingScanExtension implements Extension {
                     path = path.substring(0, path.length() - 1);
                 }
                 return new DefaultBridgeRouting(
-                        isBlockingMethod(handlerMethod),
-                        route.type(),
-                        path,
-                        regexPath,
-                        handlerMethod,
-                        eventTypes);
-            }
-        } else if (AnnotationMagic.instanceOf(route, WebSocket.class)) {
-            List<WebSocketEventType> eventTypes = asList(AnnotationMagic.cast(route, WebSocket.class).eventTypes());
-            return new DefaultWebSocketRouting(
                     isBlockingMethod(handlerMethod),
                     route.type(),
                     path,
                     regexPath,
                     handlerMethod,
                     eventTypes);
+            }
+        } else if (AnnotationMagic.instanceOf(route, WebSocket.class)) {
+            List<WebSocketEventType> eventTypes = Arrays.asList(AnnotationMagic.cast(route, WebSocket.class).eventTypes());
+            return new DefaultWebSocketRouting(
+                isBlockingMethod(handlerMethod),
+                route.type(),
+                path,
+                regexPath,
+                handlerMethod,
+                eventTypes);
         } else {
             return new DefaultRouting(
-                    isBlockingMethod(handlerMethod),
-                    route.type(),
-                    path,
-                    regexPath,
-                    asList(route.methods()),
-                    handlerMethod,
-                    route.order(),
-                    asList(route.produces()),
-                    asList(route.consumes()));
+                isBlockingMethod(handlerMethod),
+                route.type(),
+                path,
+                regexPath,
+                Arrays.asList(route.methods()),
+                handlerMethod,
+                route.order(),
+                singletonList(MediaType.ANY_TYPE.toString()), // TODO: produces/consumes
+                singletonList(MediaType.ANY_TYPE.toString()));
         }
     }
 
