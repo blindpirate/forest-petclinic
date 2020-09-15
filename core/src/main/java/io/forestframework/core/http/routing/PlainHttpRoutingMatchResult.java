@@ -187,13 +187,15 @@ public class PlainHttpRoutingMatchResult implements RoutingMatchResult {
         }
 
         private boolean mediaTypeMatch(List<MediaType> accepts, List<MediaType> comparedMediaTypes) {
-            return comparedMediaTypes.stream().allMatch(
+            return comparedMediaTypes.stream().anyMatch(
                             comparedMediaType -> accepts.stream().anyMatch(accept -> compare(comparedMediaType, accept))
                     );
         }
 
         private boolean compare(MediaType compared, MediaType accept) {
-            return compared.withoutParameters().is(accept.withoutParameters()) && matchParameters(accept, compared);
+            return (compared.withoutParameters().is(accept.withoutParameters())
+                || accept.withoutParameters().is(compared.withoutParameters()))
+                && matchParameters(accept, compared);
         }
 
         private List<MediaType> getMediaTypes(HttpServerRequest request, CharSequence headerName) {
