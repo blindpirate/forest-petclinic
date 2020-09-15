@@ -73,6 +73,34 @@ class WebSocketClient(val socket: WebSocket, val url: String) {
     suspend fun close() = socket.closeAwait()
 }
 
+
+// Set body handler before reading the whole response, otherwise
+// https://stackoverflow.com/questions/57957767/illegalstateexception-thrown-when-reading-the-vert-x-http-client-response-body
+suspend fun HttpClient.get(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = awaitResult<HttpClientResponse> { handler ->
+    val headers = HeadersMultiMap().apply { headers.forEach { (k, v) -> add(k, v) } }
+
+    get(port, "localhost", uri, headers) { responseAsyncResult ->
+        val wrapper = HttpClientResponseWrapper(responseAsyncResult.result())
+        responseAsyncResult.result().bodyHandler {
+            wrapper.body = it
+            handler.handle(responseAsyncResult.map { wrapper })
+        }
+    }
+}
+
+fun HttpClientResponse.assertStatusCode(statusCode: HttpStatusCode): HttpClientResponse {
+    Assertions.assertEquals(statusCode.code, statusCode())
+    return this
+}
+
+fun HttpClientResponse.assertStatusCode(statusCode: Int): HttpClientResponse {
+    Assertions.assertEquals(statusCode, statusCode())
+    return this
+}
+
+
+fun runBlockingUnit(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.() -> Unit) = runBlocking(context, block)
+
 @Timeout(value = 30, unit = TimeUnit.SECONDS)
 abstract class AbstractForestIntegrationTest {
     @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
@@ -92,32 +120,24 @@ abstract class AbstractForestIntegrationTest {
         client = vertx.createHttpClient()
     }
 
-    suspend fun HttpClientResponse.bodyAsString(): String =
-        if (this is HttpClientResponseWrapper) {
-            body.toString()
-        } else {
-            bodyAwait().toString()
-        }
+    suspend fun get(uri: String) = client.get(port.toInt(), uri)
 
-    suspend fun HttpClientResponse.bodyAsBinary(): Buffer =
-        if (this is HttpClientResponseWrapper) {
-            body
-        } else {
-            bodyAwait()
-        }
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun <T> HttpClientResponseWrapper.toObject(klass: Class<T>) = objectMapper.readValue(bodyAsString(), klass)
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    suspend fun <T> HttpClientResponseWrapper.toObject(klass: TypeReference<T>) = objectMapper.readValue(bodyAsString(), klass)
 
     suspend fun openWebsocket(uri: String) = WebSocketClient(client.webSocketAwait(port.toInt(), "localhost", uri), uri)
 
-    // Set body handler before reading the whole response, otherwise
-    // https://stackoverflow.com/questions/57957767/illegalstateexception-thrown-when-reading-the-vert-x-http-client-response-body
-    suspend fun get(uri: String) = awaitResult<HttpClientResponse> { handler ->
-        client.get(port.toInt(), "localhost", uri) { responseAsyncResult ->
-            val wrapper = HttpClientResponseWrapper(responseAsyncResult.result())
-            responseAsyncResult.result().bodyHandler {
-                wrapper.body = it
-                handler.handle(responseAsyncResult.map { wrapper })
-            }
-        }
+    fun HttpClientResponse.assertContentType(type: String): HttpClientResponse {
+        Assertions.assertEquals(type, getHeader(OptimizedHeaders.HEADER_CONTENT_TYPE.toString()).toString())
+        return this
+    }
+
+    fun HttpClientResponse.assertContentType(type: CharSequence): HttpClientResponse {
+        assertContentType(type.toString())
+        return this
     }
 
     fun HttpRequest<Buffer>.contentTypeJson() = HeadersMultiMap().apply {
@@ -135,26 +155,18 @@ abstract class AbstractForestIntegrationTest {
 
     fun HttpClientResponse.assert404() = assertStatusCode(HttpStatusCode.NOT_FOUND)
 
-    fun HttpClientResponse.assertStatusCode(statusCode: HttpStatusCode): HttpClientResponse {
-        Assertions.assertEquals(statusCode.code, statusCode())
-        return this
-    }
+    suspend fun HttpClientResponse.bodyAsString(): String =
+        if (this is HttpClientResponseWrapper) {
+            body.toString()
+        } else {
+            bodyAwait().toString()
+        }
 
-    @Suppress("BlockingMethodInNonBlockingContext")
-    suspend fun <T> HttpClientResponseWrapper.toObject(klass: Class<T>) = objectMapper.readValue(bodyAsString(), klass)
+    suspend fun HttpClientResponse.bodyAsBinary(): Buffer =
+        if (this is HttpClientResponseWrapper) {
+            body
+        } else {
+            bodyAwait()
+        }
 
-    @Suppress("BlockingMethodInNonBlockingContext")
-    suspend fun <T> HttpClientResponseWrapper.toObject(klass: TypeReference<T>) = objectMapper.readValue(bodyAsString(), klass)
-
-    fun HttpClientResponse.assertContentType(type: String): HttpClientResponse {
-        Assertions.assertEquals(type, getHeader(OptimizedHeaders.HEADER_CONTENT_TYPE.toString()).toString())
-        return this
-    }
-
-    fun HttpClientResponse.assertContentType(type: CharSequence): HttpClientResponse {
-        assertContentType(type.toString())
-        return this
-    }
-
-    fun runBlockingUnit(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.() -> Unit) = runBlocking(context, block)
 }
