@@ -73,13 +73,12 @@ class WebSocketClient(val socket: WebSocket, val url: String) {
     suspend fun close() = socket.closeAwait()
 }
 
-
 // Set body handler before reading the whole response, otherwise
 // https://stackoverflow.com/questions/57957767/illegalstateexception-thrown-when-reading-the-vert-x-http-client-response-body
 suspend fun HttpClient.get(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = awaitResult<HttpClientResponse> { handler ->
-    val headers = HeadersMultiMap().apply { headers.forEach { (k, v) -> add(k, v) } }
+    val requestHeaders = HeadersMultiMap().apply { headers.forEach { (k, v) -> add(k, v) } }
 
-    get(port, "localhost", uri, headers) { responseAsyncResult ->
+    get(port, "localhost", uri, requestHeaders) { responseAsyncResult ->
         val wrapper = HttpClientResponseWrapper(responseAsyncResult.result())
         responseAsyncResult.result().bodyHandler {
             wrapper.body = it
@@ -97,7 +96,6 @@ fun HttpClientResponse.assertStatusCode(statusCode: Int): HttpClientResponse {
     Assertions.assertEquals(statusCode, statusCode())
     return this
 }
-
 
 fun runBlockingUnit(context: CoroutineContext = EmptyCoroutineContext, block: suspend CoroutineScope.() -> Unit) = runBlocking(context, block)
 
@@ -168,5 +166,4 @@ abstract class AbstractForestIntegrationTest {
         } else {
             bodyAwait()
         }
-
 }
