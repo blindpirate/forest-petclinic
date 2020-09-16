@@ -34,14 +34,50 @@ data class ConsumesContentTypeCase(
     val httpMethod: HttpMethod = HttpMethod.GET
 )
 
+data class MethodNotAllowedCase(
+    val description: String,
+    val consumes: List<String> = listOf("*/*"),
+    val contentType: String = "*/*",
+    val expectedStatusCode: Int = 200,
+    val httpMethod: HttpMethod = HttpMethod.GET
+)
 
 // Put your test cases here
 val producesAcceptCases = listOf(
-    ProducesAcceptCase("single", produces = listOf("application/json"), accept = "application/json", expectedStatusCode = 200)
+    ProducesAcceptCase("get 200 when matching single", produces = listOf("application/json"), accept = "application/json", expectedStatusCode = 200),
+    ProducesAcceptCase("get 406 when matching single", produces = listOf("application/json"), accept = "text/html", expectedStatusCode = 406),
+
+    ProducesAcceptCase("get 200 when matching multiple", produces = listOf("application/json", "text/plain"), accept = "text/html, application/json;q=0.9, text/plain;q=0.8", expectedStatusCode = 200),
+    ProducesAcceptCase("get 406 when matching multiple", produces = listOf("application/json", "text/plain"), accept = "application/xhtml+xml, text/html;q=0.3", expectedStatusCode = 406),
+
+    ProducesAcceptCase("get 200 when matching wildcard match", produces = listOf("text/*"), accept = "text/html, application/json; level=1;q=0.9, text/plain;q=0.8", expectedStatusCode = 200),
+    ProducesAcceptCase("get 406 when matching wildcard match", produces = listOf("application/json"), accept = "text/*", expectedStatusCode = 406),
+
+    ProducesAcceptCase("get 200 when matching double wildcard case 1", produces = listOf("*/*"), accept = "*/*;level=1;q=0.9", expectedStatusCode = 200),
+    ProducesAcceptCase("get 200 when matching double wildcard case 2", produces = listOf("text/*"), accept = "*/*;q=0.7", expectedStatusCode = 200),
+    ProducesAcceptCase("get 200 when matching double wildcard case 3", produces = listOf("*/*"), accept = "text/*", expectedStatusCode = 200),
+    ProducesAcceptCase("get 200 when matching double wildcard case 4", produces = listOf("*/*"), accept = "application/xhtml+xml;q=0.7, image/jxr;level=1", expectedStatusCode = 200),
+
+    ProducesAcceptCase("get 200 when matching with parameter", produces = listOf("application/json;charset=UTF-8"), accept = "application/json;q=0.3", expectedStatusCode = 200),
+    ProducesAcceptCase("get 406 when matching with parameter", produces = listOf("application/json;charset=UTF-8"), accept = "application/json;level=1;charset=UTF-16", expectedStatusCode = 406)
 )
 
 val consumesContentTypeCases = listOf(
-    ConsumesContentTypeCase("OK", consumes = listOf("*/*"), contentType = "application/json", expectedStatusCode = 200)
+    ConsumesContentTypeCase("get 200 when matching single", consumes = listOf("application/json"), contentType = "application/json", expectedStatusCode = 200),
+    ConsumesContentTypeCase("get 415 when matching single", consumes = listOf("application/json"), contentType = "text/html", expectedStatusCode = 415),
+
+    ConsumesContentTypeCase("get 200 when matching wildcard", consumes = listOf("application/json", "image/jxr"), contentType = "application/*", expectedStatusCode = 200),
+    ConsumesContentTypeCase("get 415 when matching wildcard", consumes = listOf("application/json"), contentType = "text/*", expectedStatusCode = 415),
+
+    ConsumesContentTypeCase("get 200 when matching double wildcard case 1", consumes = listOf("*/*"), contentType = "application/json", expectedStatusCode = 200),
+    ConsumesContentTypeCase("get 200 when matching double wildcard case 2", consumes = listOf("*/*"), contentType = "text/*", expectedStatusCode = 200),
+
+    ConsumesContentTypeCase("get 200 when matching with parameter", consumes = listOf("application/json;charset=UTF-8"), contentType = "application/json;q=0.9", expectedStatusCode = 200),
+    ConsumesContentTypeCase("get 415 when matching with parameter", consumes = listOf("application/json;charset=UTF-8"), contentType = "application/json;charset=UTF-16", expectedStatusCode = 415)
+)
+
+val methodNotAllowedCases = listOf(
+    MethodNotAllowedCase("get 405 if method not allowed", httpMethod = HttpMethod.POST, expectedStatusCode = 405)
 )
 
 class MediaTypeNegotiatingIntegrationTest {
@@ -61,17 +97,18 @@ class MediaTypeNegotiatingIntegrationTest {
     /**
      * Creates a mock server, registers the routing dynamically, waits for the server startup, then returns the port
      */
-    private fun startTestApplication(vertx: Vertx,
-                                     httpMethod: HttpMethod = HttpMethod.GET,
-                                     produces: List<String> = listOf("*/*"),
-                                     consumes: List<String> = listOf("*/*")): Int {
+    private fun startTestApplication(
+        vertx: Vertx,
+        httpMethod: HttpMethod = HttpMethod.GET,
+        produces: List<String> = listOf("*/*"),
+        consumes: List<String> = listOf("*/*")
+    ): Int {
         val configProvider = ConfigProvider(HashMap(), HashMap())
         val extensions = listOf(
             BindFreePortExtension(),
             object : Extension {
                 override fun beforeInjector(startupContext: StartupContext?) {
                     startupContext!!.componentClasses.add(WebRequestHandlingModule::class.java)
-
                 }
 
                 override fun afterInjector(injector: Injector) {
@@ -106,6 +143,19 @@ class MediaTypeNegotiatingIntegrationTest {
 
             val httpClient = vertx.createHttpClient()
             httpClient.get(port, "/test", mapOf("Content-Type" to case.contentType)).assertStatusCode(case.expectedStatusCode)
+        }
+    }
+
+    @TestFactory
+    fun testMethodNotAllowed() = methodNotAllowedCases.map(this::testTwo)
+
+    private fun testTwo(case: MethodNotAllowedCase) = DynamicTest.dynamicTest(case.description) {
+        runBlockingUnit {
+            val vertx = Vertx.vertx()
+            val port = startTestApplication(vertx, httpMethod = case.httpMethod)
+
+            val httpClient = vertx.createHttpClient()
+            httpClient.get(port, "/test").assertStatusCode(case.expectedStatusCode)
         }
     }
 
