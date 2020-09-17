@@ -3,6 +3,7 @@ package io.forestframework.testfixtures
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.forestframework.core.config.Config
+import io.forestframework.core.http.HttpMethod
 import io.forestframework.core.http.HttpStatusCode
 import io.forestframework.core.http.OptimizedHeaders
 import io.vertx.core.Vertx
@@ -84,6 +85,13 @@ suspend fun HttpClient.get(port: Int, uri: String, headers: Map<String, String> 
             wrapper.body = it
             handler.handle(responseAsyncResult.map { wrapper })
         }
+    }
+}
+
+suspend fun HttpClient.send(method: HttpMethod, port: Int, uri: String) = awaitResult<HttpClientResponse> { handler ->
+    send(method, port, "localhost", uri) {
+
+
     }
 }
 
