@@ -9,6 +9,7 @@ import io.vertx.core.Vertx
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.HttpClient
 import io.vertx.core.http.HttpClientResponse
+import io.vertx.core.http.HttpMethod
 import io.vertx.core.http.WebSocket
 import io.vertx.core.http.impl.headers.HeadersMultiMap
 import io.vertx.ext.web.client.HttpRequest
@@ -75,22 +76,15 @@ class WebSocketClient(val socket: WebSocket, val url: String) {
 
 // Set body handler before reading the whole response, otherwise
 // https://stackoverflow.com/questions/57957767/illegalstateexception-thrown-when-reading-the-vert-x-http-client-response-body
-suspend fun HttpClient.get(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = awaitResult<HttpClientResponse> { handler ->
+suspend fun HttpClient.get(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = send(HttpMethod.GET, port, uri, headers)
+
+suspend fun HttpClient.delete(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = send(HttpMethod.DELETE, port, uri, headers)
+
+suspend fun HttpClient.send(httpMethod: HttpMethod, port: Int, uri: String, headers: Map<String, String> = emptyMap()) = awaitResult<HttpClientResponse> { handler ->
     val requestHeaders = HeadersMultiMap().apply { headers.forEach { (k, v) -> add(k, v) } }
 
-    get(port, "localhost", uri, requestHeaders) { responseAsyncResult ->
-        val wrapper = HttpClientResponseWrapper(responseAsyncResult.result())
-        responseAsyncResult.result().bodyHandler {
-            wrapper.body = it
-            handler.handle(responseAsyncResult.map { wrapper })
-        }
-    }
-}
+    send(httpMethod, port, "localhost", uri, requestHeaders) { responseAsyncResult ->
 
-suspend fun HttpClient.delete(port: Int, uri: String, headers: Map<String, String> = emptyMap()) = awaitResult<HttpClientResponse> { handler ->
-    val requestHeaders = HeadersMultiMap().apply { headers.forEach { (k, v) -> add(k, v) } }
-
-    delete(port, "localhost", uri, requestHeaders) { responseAsyncResult ->
         val wrapper = HttpClientResponseWrapper(responseAsyncResult.result())
         responseAsyncResult.result().bodyHandler {
             wrapper.body = it
