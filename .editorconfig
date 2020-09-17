@@ -2,12 +2,16 @@
 root = true
 
 [*.{kt,kts}]
-disabled_rules=import-ordering
+disabled_rules=import-ordering,no-wildcard-imports,indent
 
 [*.java]
 end_of_line = lf
 insert_final_newline = true
 align_multiline_chained_methods = true
+align_multiline_parameters = true
+align_multiline_parameters_in_calls = true
+align_multiline_ternary_operation = true
+align_subsequent_simple_methods = true
 
 [*]
 charset = utf-8
