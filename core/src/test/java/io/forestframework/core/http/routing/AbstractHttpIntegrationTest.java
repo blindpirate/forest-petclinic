@@ -28,8 +28,6 @@ public class AbstractHttpIntegrationTest {
                 .setUri(uri)
                 .setHeader("Accept", String.valueOf(ContentType.APPLICATION_JSON))
                 .setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-//                .setHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36")
-//                .setHeader(HttpHeaders.CONTENT_TYPE, "text/html")
                 .build();
         CloseableHttpResponse response = client.execute(request);
         return new HttpResponse(response.getStatusLine().getStatusCode(), EntityUtils.toString(response.getEntity()));
