@@ -1,11 +1,8 @@
-package io.forestframework.core.http
+package io.forestframework.core.http.websocket
 
 import io.forestframework.core.ForestApplication
+import io.forestframework.core.http.Router
 import io.forestframework.core.http.param.PathParam
-import io.forestframework.core.http.websocket.OnWSClose
-import io.forestframework.core.http.websocket.OnWSError
-import io.forestframework.core.http.websocket.OnWSMessage
-import io.forestframework.core.http.websocket.OnWSOpen
 import io.forestframework.ext.core.IncludeComponents
 import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
