@@ -21,17 +21,6 @@ import javax.inject.Inject
 
 @ForestApplication
 class WebSocketTestApp {
-    val messages = mutableListOf<String>()
-
-//    @WebSocket("/test1")
-//    suspend fun webSocketWriteBackDirectly(socket: SockJSSocket, messageType: SockJSEventType, message: Buffer) {
-//        messages.add(message.toString())
-//        when (messageType) {
-//            SockJSEventType.OPEN -> socket.writeAwait("open")
-//            SockJSEventType.MESSAGE -> socket.writeAwait(message)
-//            SockJSEventType.CLOSE -> socket.writeAwait("close")
-//        }
-//    }
 }
 
 @Router("/chat/:username")
