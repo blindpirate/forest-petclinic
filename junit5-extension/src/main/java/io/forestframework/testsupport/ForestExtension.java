@@ -31,7 +31,9 @@ public class ForestExtension implements BeforeAllCallback, AfterAllCallback, Tes
 
     @Override
     public void afterAll(ExtensionContext context) throws Exception {
-        this.application.close();
+        if (application != null) {
+            application.close();
+        }
     }
 
     @Override

@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.ANNOTATION_TYPE})
 @Extends(EnableExtensions.class)
-@EnableExtensions(extensions = AutoScanComponentsExtension.class)
+@EnableExtensions(extensions = AutoComponentScanExtension.class)
 public @interface AutoScanComponents {
     String APPLICATION_PACKAGE = "APPLICATION_PACKAGE";
 

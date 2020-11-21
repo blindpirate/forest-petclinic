@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import static com.google.common.reflect.ClassPath.from;
 import static io.forestframework.ext.core.AutoScanComponents.APPLICATION_PACKAGE;
 
-public class AutoScanComponentsExtension implements Extension {
+public class AutoComponentScanExtension implements Extension {
     @Override
     public void beforeInjector(StartupContext startupContext) {
         LinkedHashSet<Class<?>> componentClasses = new LinkedHashSet<>(startupContext.getComponentClasses());
