@@ -6,7 +6,7 @@ import com.google.inject.BindingAnnotation;
 import io.forestframework.core.http.Router;
 import io.forestframework.ext.api.EnableExtensions;
 import io.forestframework.ext.core.AutoRoutingScanExtension;
-import io.forestframework.ext.core.AutoScanComponentsExtension;
+import io.forestframework.ext.core.AutoComponentScanExtension;
 import io.forestframework.ext.core.BannerExtension;
 import io.forestframework.ext.core.HttpServerExtension;
 
@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 @Scope
 @BindingAnnotation
 @Extends(EnableExtensions.class)
-@EnableExtensions(extensions = {BannerExtension.class, AutoScanComponentsExtension.class, AutoRoutingScanExtension.class, HttpServerExtension.class})
+@EnableExtensions(extensions = {BannerExtension.class, AutoComponentScanExtension.class, AutoRoutingScanExtension.class, HttpServerExtension.class})
 @CompositeOf({Component.class, Router.class, Singleton.class})
 public @interface ForestApplication {
 }

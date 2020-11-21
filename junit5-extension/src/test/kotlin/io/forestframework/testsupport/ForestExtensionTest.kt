@@ -7,7 +7,7 @@ import io.forestframework.ext.api.EnableExtensions
 import io.forestframework.ext.api.Extension
 import io.forestframework.ext.api.StartupContext
 import io.forestframework.ext.core.AutoRoutingScanExtension
-import io.forestframework.ext.core.AutoScanComponentsExtension
+import io.forestframework.ext.core.AutoComponentScanExtension
 import io.forestframework.ext.core.BannerExtension
 import io.forestframework.ext.core.ExtraConfig
 import io.forestframework.ext.core.HttpServerExtension
@@ -67,7 +67,7 @@ class ForestExtensionOrderTest {
                 Extension1::class.java,
                 Extension2::class.java,
                 BannerExtension::class.java,
-                AutoScanComponentsExtension::class.java,
+                AutoComponentScanExtension::class.java,
                 AutoRoutingScanExtension::class.java,
                 HttpServerExtension::class.java,
                 Extension3::class.java,

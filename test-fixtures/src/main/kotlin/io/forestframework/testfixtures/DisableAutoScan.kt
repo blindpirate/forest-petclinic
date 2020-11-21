@@ -5,13 +5,13 @@ import io.forestframework.ext.api.After
 import io.forestframework.ext.api.EnableExtensions
 import io.forestframework.ext.api.Extension
 import io.forestframework.ext.api.StartupContext
-import io.forestframework.ext.core.AutoScanComponentsExtension
+import io.forestframework.ext.core.AutoComponentScanExtension
 
 @EnableExtensions(extensions = [DisableAutoScanExtension::class])
 @Extends(EnableExtensions::class)
 annotation class DisableAutoScan
 
-@After(classes = [AutoScanComponentsExtension::class])
+@After(classes = [AutoComponentScanExtension::class])
 class DisableAutoScanExtension : Extension {
     override fun beforeInjector(startupContext: StartupContext) {
         startupContext.componentClasses.removeIf {

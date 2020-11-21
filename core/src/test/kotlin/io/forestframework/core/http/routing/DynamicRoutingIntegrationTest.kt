@@ -5,8 +5,10 @@ import io.forestframework.core.ForestApplication
 import io.forestframework.core.http.HttpMethod
 import io.forestframework.core.http.HttpResponse
 import io.forestframework.core.http.result.GetPlainText
+import io.forestframework.ext.api.Before
 import io.forestframework.ext.api.EnableExtensions
 import io.forestframework.ext.api.Extension
+import io.forestframework.ext.core.HttpServerExtension
 import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testsupport.ForestExtension
@@ -32,6 +34,30 @@ class DynamicAddingRoutingExtension : Extension {
     }
 }
 
+@Before(classes = [HttpServerExtension::class])
+class DynamicAddRoutingToExistingRoutingExtension : Extension {
+    override fun afterInjector(injector: Injector) {
+        injector.getInstance(RoutingManager::class.java)
+            .getRouting(RoutingType.HANDLER)
+            .forEach {
+                injector.getInstance(RoutingManager::class.java)
+                    .getRouting(RoutingType.POST_HANDLER)
+                    .add(DefaultRouting(
+                        false,
+                        RoutingType.POST_HANDLER,
+                        it.path,
+                        "",
+                        listOf(HttpMethod.GET),
+                        DynamicRoutingIntegrationTestApp::class.java.methods.first { it.name == "dynamicPostHandler" },
+                        0,
+                        listOf("*/*"),
+                        listOf("*/*")
+                    ))
+            }
+    }
+}
+
+@EnableExtensions(extensions = [DynamicAddRoutingToExistingRoutingExtension::class])
 @ForestApplication
 class DynamicRoutingIntegrationTestApp {
     @PreHandler("/**", order = -42)
@@ -44,8 +70,15 @@ class DynamicRoutingIntegrationTestApp {
         response.writeLater("dynamic_")
     }
 
+    fun dynamicPostHandler(response: HttpResponse) {
+        response.writeLater("dynamicpost")
+    }
+
     @GetPlainText("/login")
-    fun mainHandler() = "main"
+    fun mainHandler() = "main_"
+
+    @GetPlainText("/index")
+    fun index() = "index"
 }
 
 @ExtendWith(ForestExtension::class)
@@ -54,7 +87,12 @@ class DynamicRoutingIntegrationTestApp {
 @DisableAutoScan
 class DynamicRoutingIntegrationTest : AbstractForestIntegrationTest() {
     @Test
+    fun canHaveDynamicallyAddedPrePostHandler() {
+        get("/login").assert200().assertBody("static_dynamic_main_dynamicpost")
+    }
+
+    @Test
     fun canHaveDynamicallyAddedPreHandler() {
-        get("/login").assert200().assertBody("static_dynamic_main")
+        get("/index").assert200().assertBody("static_index_dynamicpost")
     }
 }
