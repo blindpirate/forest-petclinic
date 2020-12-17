@@ -9,7 +9,7 @@ import io.forestframework.core.http.routing.PreHandler
 import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testsupport.ForestExtension
-import io.forestframework.testsupport.ForestTest
+import io.forestframework.testsupport.ForestIntegrationTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
@@ -25,7 +25,7 @@ class ReadBodyMultipleTimesIntegrationTestApp {
 }
 
 @ExtendWith(ForestExtension::class)
-@ForestTest(appClass = ReadBodyMultipleTimesIntegrationTestApp::class)
+@ForestIntegrationTest(appClass = ReadBodyMultipleTimesIntegrationTestApp::class)
 @DisableAutoScan
 class ReadBodyMultipleTimesIntegrationTest : AbstractForestIntegrationTest() {
     @Test

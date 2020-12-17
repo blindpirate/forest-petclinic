@@ -1,41 +1,40 @@
 package io.forestframework.ext.core;
 
 import com.google.common.reflect.ClassPath;
-import io.forestframework.core.ForestApplication;
+import io.forestframework.ext.api.ApplicationContext;
 import io.forestframework.ext.api.Extension;
-import io.forestframework.ext.api.StartupContext;
 import io.forestframework.utils.StartupUtils;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import java.util.List;
 
 import static com.google.common.reflect.ClassPath.from;
 import static io.forestframework.ext.core.AutoScanComponents.APPLICATION_PACKAGE;
 
 public class AutoComponentScanExtension implements Extension {
-    @Override
-    public void beforeInjector(StartupContext startupContext) {
-        LinkedHashSet<Class<?>> componentClasses = new LinkedHashSet<>(startupContext.getComponentClasses());
+    private final List<String> basePackages;
 
-        determineBasePackages(startupContext).forEach(packageName -> scanAndAddComponentClasses(startupContext.getAppClass(), packageName, componentClasses));
-
-        startupContext.getComponentClasses().clear();
-        startupContext.getComponentClasses().addAll(componentClasses);
+    private AutoComponentScanExtension(List<String> basePackages) {
+        this.basePackages = basePackages;
     }
 
-    private LinkedHashSet<String> determineBasePackages(StartupContext startupContext) {
-        LinkedHashSet<String> ret = startupContext.getEnableExtensionsAnnotation(AutoScanComponents.class)
-                .stream()
-                .map(AutoScanComponents::basePackages)
-                .flatMap(Stream::of)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-        if (startupContext.getEnableExtensionsAnnotation(ForestApplication.class) != null) {
-            ret.add(APPLICATION_PACKAGE);
-        }
-        return ret;
+    public AutoComponentScanExtension() {
+        this(Arrays.asList(APPLICATION_PACKAGE));
+    }
+
+    public AutoComponentScanExtension(AutoScanComponents autoScanComponents) {
+        this(Arrays.asList(autoScanComponents.basePackages()));
+    }
+
+    @Override
+    public void start(ApplicationContext applicationContext) {
+        LinkedHashSet<Class<?>> componentClasses = new LinkedHashSet<>(applicationContext.getComponents());
+        basePackages.forEach(packageName -> scanAndAddComponentClasses(applicationContext.getAppClass(), packageName, componentClasses));
+        applicationContext.getComponents().clear();
+        applicationContext.getComponents().addAll(componentClasses);
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -45,11 +44,11 @@ public class AutoComponentScanExtension implements Extension {
         }
         try {
             from(getClass().getClassLoader())
-                    .getTopLevelClassesRecursive(packageName)
-                    .stream()
-                    .map(ClassPath.ClassInfo::load)
-                    .filter(StartupUtils::isComponentClass)
-                    .forEach(resultSet::add);
+                .getTopLevelClassesRecursive(packageName)
+                .stream()
+                .map(ClassPath.ClassInfo::load)
+                .filter(StartupUtils::isComponentClass)
+                .forEach(resultSet::add);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }

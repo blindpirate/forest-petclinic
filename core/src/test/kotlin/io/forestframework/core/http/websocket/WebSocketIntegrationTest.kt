@@ -8,7 +8,7 @@ import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testfixtures.runBlockingUnit
 import io.forestframework.testsupport.ForestExtension
-import io.forestframework.testsupport.ForestTest
+import io.forestframework.testsupport.ForestIntegrationTest
 import io.vertx.ext.web.handler.sockjs.SockJSSocket
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -56,7 +56,7 @@ class SockJSRouter {
 }
 
 @ExtendWith(ForestExtension::class)
-@ForestTest(appClass = WebSocketTestApp::class)
+@ForestIntegrationTest(appClass = WebSocketTestApp::class)
 @DisableAutoScan
 @IncludeComponents(classes = [SockJSRouter::class])
 @Disabled

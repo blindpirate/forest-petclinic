@@ -5,19 +5,21 @@ import io.forestframework.core.ForestApplication
 import io.forestframework.core.http.HttpMethod
 import io.forestframework.core.http.HttpResponse
 import io.forestframework.core.http.result.GetPlainText
+import io.forestframework.ext.api.After
 import io.forestframework.ext.api.Before
-import io.forestframework.ext.api.EnableExtensions
+import io.forestframework.ext.api.WithExtensions
 import io.forestframework.ext.api.Extension
+import io.forestframework.ext.core.AutoRoutingScanExtension
 import io.forestframework.ext.core.HttpServerExtension
 import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testsupport.ForestExtension
-import io.forestframework.testsupport.ForestTest
+import io.forestframework.testsupport.ForestIntegrationTest
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 
 class DynamicAddingRoutingExtension : Extension {
-    override fun afterInjector(injector: Injector) {
+    override fun configure(injector: Injector) {
         injector.getInstance(RoutingManager::class.java)
             .getRouting(RoutingType.PRE_HANDLER)
             .add(DefaultRouting(
@@ -35,8 +37,9 @@ class DynamicAddingRoutingExtension : Extension {
 }
 
 @Before(classes = [HttpServerExtension::class])
+@After(classes = [AutoRoutingScanExtension::class])
 class DynamicAddRoutingToExistingRoutingExtension : Extension {
-    override fun afterInjector(injector: Injector) {
+    override fun configure(injector: Injector) {
         injector.getInstance(RoutingManager::class.java)
             .getRouting(RoutingType.HANDLER)
             .forEach {
@@ -57,7 +60,7 @@ class DynamicAddRoutingToExistingRoutingExtension : Extension {
     }
 }
 
-@EnableExtensions(extensions = [DynamicAddRoutingToExistingRoutingExtension::class])
+@WithExtensions(extensions = [DynamicAddRoutingToExistingRoutingExtension::class])
 @ForestApplication
 class DynamicRoutingIntegrationTestApp {
     @PreHandler("/**", order = -42)
@@ -78,12 +81,12 @@ class DynamicRoutingIntegrationTestApp {
     fun mainHandler() = "main_"
 
     @GetPlainText("/index")
-    fun index() = "index"
+    fun index() = "index_"
 }
 
 @ExtendWith(ForestExtension::class)
-@EnableExtensions(extensions = [DynamicAddingRoutingExtension::class])
-@ForestTest(appClass = DynamicRoutingIntegrationTestApp::class)
+@WithExtensions(extensions = [DynamicAddingRoutingExtension::class])
+@ForestIntegrationTest(appClass = DynamicRoutingIntegrationTestApp::class)
 @DisableAutoScan
 class DynamicRoutingIntegrationTest : AbstractForestIntegrationTest() {
     @Test

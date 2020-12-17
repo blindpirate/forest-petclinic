@@ -9,7 +9,7 @@ import io.forestframework.testfixtures.AbstractForestIntegrationTest
 import io.forestframework.testfixtures.DisableAutoScan
 import io.forestframework.testfixtures.runBlockingUnit
 import io.forestframework.testsupport.ForestExtension
-import io.forestframework.testsupport.ForestTest
+import io.forestframework.testsupport.ForestIntegrationTest
 import io.vertx.core.buffer.Buffer
 import io.vertx.core.http.ServerWebSocket
 import io.vertx.kotlin.coroutines.await
@@ -52,7 +52,7 @@ class WebSocketTestApp {
 }
 
 @ExtendWith(ForestExtension::class)
-@ForestTest(appClass = WebSocketTestApp::class)
+@ForestIntegrationTest(appClass = WebSocketTestApp::class)
 @DisableAutoScan
 @Timeout(120)
 class WebSocketIntegrationTest : AbstractForestIntegrationTest() {

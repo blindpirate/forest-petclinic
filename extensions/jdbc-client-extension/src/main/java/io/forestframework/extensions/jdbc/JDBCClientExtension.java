@@ -4,15 +4,15 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import io.forestframework.core.config.Config;
 import io.forestframework.ext.api.Extension;
-import io.forestframework.ext.api.StartupContext;
+import io.forestframework.ext.api.ApplicationContext;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.jdbc.JDBCClient;
 
 public class JDBCClientExtension implements Extension {
     @Override
-    public void beforeInjector(StartupContext startupContext) {
-        startupContext.getComponentClasses().add(JDBCModule.class);
+    public void start(ApplicationContext applicationContext) {
+        applicationContext.getComponents().add(JDBCModule.class);
     }
 
     public static class JDBCModule extends AbstractModule {
