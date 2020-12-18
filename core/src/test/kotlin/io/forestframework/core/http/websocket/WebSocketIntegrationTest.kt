@@ -20,8 +20,7 @@ import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 @ForestApplication
-class WebSocketTestApp {
-}
+class WebSocketTestApp
 
 @Router("/chat/:username")
 class SockJSRouter {

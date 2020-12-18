@@ -34,8 +34,7 @@ class ProductionServiceWiringExtension : Extension {
 
 @WithExtensions(extensions = [ProductionServiceWiringExtension::class])
 @ForestApplication
-class MockBeanIntegrationTestApp {
-}
+class MockBeanIntegrationTestApp
 
 object TestMockService : MockableService {
     override fun foo() = "Mock"
@@ -49,7 +48,6 @@ class MockBeanExtension : Extension {
         })
     }
 }
-
 
 @ExtendWith(ForestExtension::class)
 @ForestIntegrationTest(appClass = MockBeanIntegrationTestApp::class)

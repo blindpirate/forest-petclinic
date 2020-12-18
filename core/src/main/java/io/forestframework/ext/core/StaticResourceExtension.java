@@ -19,6 +19,7 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -61,17 +62,29 @@ public class StaticResourceExtension implements Extension {
         }
     }
 
-    private final WithStaticResource withStaticResource;
+    private final List<String> webroots;
+
+    public StaticResourceExtension() {
+        this(Collections.singletonList("static"));
+    }
 
     public StaticResourceExtension(WithStaticResource withStaticResource) {
-        this.withStaticResource = withStaticResource;
+        this(getWebroots(withStaticResource));
+    }
+
+    private StaticResourceExtension(List<String> webroots) {
+        this.webroots = webroots;
+    }
+
+    private static List<String> getWebroots(WithStaticResource withStaticResource) {
+        List<String> webroots = new ArrayList<>();
+        webroots.add(withStaticResource.webroot());
+        webroots.addAll(Arrays.asList(withStaticResource.webroots()));
+        return webroots;
     }
 
     @Override
     public void start(ApplicationContext applicationContext) {
-        List<String> webroots = new ArrayList<>();
-        webroots.add(withStaticResource.webroot());
-        webroots.addAll(Arrays.asList(withStaticResource.webroots()));
         applicationContext.getConfigProvider().addDefaultOptions("forest.static.webroot", () -> "static");
         applicationContext.getConfigProvider().addDefaultOptions("forest.static.webroots", () -> webroots);
     }

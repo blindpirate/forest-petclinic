@@ -2,8 +2,6 @@ package io.forestframework.core.http.routing;
 
 
 import com.google.inject.Injector;
-import com.google.inject.Key;
-import com.google.inject.TypeLiteral;
 import io.forestframework.ext.api.ApplicationContext;
 import io.forestframework.ext.api.Extension;
 import io.forestframework.ext.core.AutoRoutingScanExtension;

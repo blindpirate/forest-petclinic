@@ -150,7 +150,12 @@ public class ExtensionScanner {
     }
 
     private static List<ExtensionAndAnnotation> deduplicate(List<ExtensionAndAnnotation> extensionAndAnnotations) {
-        Set<ExtensionAndAnnotation> set = new LinkedHashSet<>(extensionAndAnnotations);
+        Set<ExtensionAndAnnotation> set = new LinkedHashSet<>();
+        for (ExtensionAndAnnotation extensionAndAnnotation : extensionAndAnnotations) {
+            // Overwrite
+            set.remove(extensionAndAnnotation);
+            set.add(extensionAndAnnotation);
+        }
         return new ArrayList<>(set);
     }
 

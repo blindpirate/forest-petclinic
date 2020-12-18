@@ -1,14 +1,13 @@
 package io.forestframework.core.http.routing
 
 import com.google.inject.Injector
-import io.forestframework.core.Forest
 import io.forestframework.core.config.ConfigProvider
 import io.forestframework.core.http.HttpMethod
 import io.forestframework.core.http.routing.RoutingType.HANDLER
 import io.forestframework.core.modules.WebRequestHandlingModule
+import io.forestframework.ext.api.ApplicationContext
 import io.forestframework.ext.api.DefaultApplicationContext
 import io.forestframework.ext.api.Extension
-import io.forestframework.ext.api.ApplicationContext
 import io.forestframework.ext.core.HttpServerExtension
 import io.forestframework.testfixtures.HttpClient
 import io.forestframework.testfixtures.runBlockingUnit

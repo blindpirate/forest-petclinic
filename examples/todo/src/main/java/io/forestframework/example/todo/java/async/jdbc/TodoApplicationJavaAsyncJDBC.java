@@ -40,10 +40,10 @@ public class TodoApplicationJavaAsyncJDBC {
 
     public static class InitDataExtension implements Extension {
         @Override
-        public void afterStart(Injector injector) {
+        public void configure(Injector injector) {
             try {
                 VertxCompletableFuture.from(injector.getInstance(Vertx.class).getOrCreateContext(),
-                        injector.getInstance(TodoService.class).initData()).get();
+                                            injector.getInstance(TodoService.class).initData()).get();
             } catch (Throwable e) {
                 throw new RuntimeException(e);
             }

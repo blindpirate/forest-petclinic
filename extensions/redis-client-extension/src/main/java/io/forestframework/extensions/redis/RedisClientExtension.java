@@ -5,8 +5,8 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import io.forestframework.core.config.Config;
-import io.forestframework.ext.api.Extension;
 import io.forestframework.ext.api.ApplicationContext;
+import io.forestframework.ext.api.Extension;
 import io.forestframework.utils.completablefuture.VertxCompletableFuture;
 import io.vertx.core.Vertx;
 import io.vertx.redis.client.Redis;
@@ -18,11 +18,11 @@ public class RedisClientExtension implements Extension {
     @Override
     public void start(ApplicationContext applicationContext) {
         applicationContext.getConfigProvider().addDefaultOptions("forest.redis", RedisOptions::new);
-        applicationContext.getComponents().add(RedisClientModule.class);
+        applicationContext.getModules().add(new RedisClientModule());
     }
 
     @Override
-    public void afterStart(Injector injector) {
+    public void configure(Injector injector) {
         injector.getInstance(RedisAPI.class);
     }
 

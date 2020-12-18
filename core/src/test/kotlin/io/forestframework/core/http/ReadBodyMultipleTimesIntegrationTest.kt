@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED_PARAMETER")
+
 package io.forestframework.core.http
 
 import io.forestframework.core.ForestApplication

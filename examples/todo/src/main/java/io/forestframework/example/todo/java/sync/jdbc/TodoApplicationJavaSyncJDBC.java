@@ -31,9 +31,8 @@ public class TodoApplicationJavaSyncJDBC {
 
     public static class InitDataExtension implements Extension {
         @Override
-        public void afterStart(Injector injector) {
+        public void configure(Injector injector) {
             injector.getInstance(TodoService.class).initData();
         }
     }
-
 }

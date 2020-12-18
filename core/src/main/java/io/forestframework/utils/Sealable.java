@@ -14,7 +14,7 @@ public interface Sealable {
     }
 
     default void checkSealed() {
-        if(isSealed()) {
+        if (isSealed()) {
             throw new UnsupportedOperationException("This object is already sealed and immutable!");
         }
     }

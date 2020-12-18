@@ -44,7 +44,7 @@ class JDBCModule : AbstractModule() {
 }
 
 class InitDataExtension : Extension {
-    override fun afterStart(injector: Injector) {
+    override fun configure(injector: Injector) {
         runBlocking {
             injector.getInstance(TodoService::class.java).initData()
         }

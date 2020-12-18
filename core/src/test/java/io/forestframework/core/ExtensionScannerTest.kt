@@ -17,16 +17,14 @@ class ExtensionWithDefaultConstructor : Extension
 
 class ExtensionWithAnnotationConstructor(
     val annotation: EnableExtensionWithAnnotationConstructor
-) : Extension {
-}
+) : Extension
 
 @Extends(WithExtensions::class)
 @WithExtensions(extensions = [ExtensionWithAnnotationConstructor::class])
-annotation class EnableExtensionWithAnnotationConstructor(val number: Int) {
-}
+annotation class EnableExtensionWithAnnotationConstructor(val number: Int)
 
-@EnableExtensionWithAnnotationConstructor(42)
 @WithExtensions(extensions = [ExtensionWithAnnotationConstructor::class])
+@EnableExtensionWithAnnotationConstructor(42)
 class TestApp1
 
 // A -> B

@@ -184,7 +184,7 @@ abstract class AbstractForestIntegrationTest {
 
     fun get(path: String, headers: Map<String, String> = emptyMap()): HttpClientResponse = send(HttpMethod.GET, path, headers)
 
-    fun post(path: String, headers: Map<String, String> = emptyMap(), body:String = ""): HttpClientResponse = send(HttpMethod.POST, path, headers, body)
+    fun post(path: String, headers: Map<String, String> = emptyMap(), body: String = ""): HttpClientResponse = send(HttpMethod.POST, path, headers, body)
 
     suspend fun openWebsocket(uri: String) = WebSocketClient(vertxClient.webSocket(port.toInt(), "localhost", uri).await(), uri)
 
